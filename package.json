@@ -1,0 +1,82 @@
+{
+  "name": "node-gen",
+  "version": "1.0.0",
+  "description": "Interactive CLI to scaffold production-ready Node.js backends — Express, Fastify, Hono, TypeScript, Zod, Prisma, Docker, and CI.",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "node-gen": "./dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "CONTRIBUTING.md"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup src/index.ts src/cli.ts --format esm,cjs --dts --clean --sourcemap && node scripts/fix-cli.mjs",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run typecheck && npm run test && npm run build"
+  },
+  "keywords": [
+    "node-gen",
+    "create-node-app",
+    "scaffold",
+    "generator",
+    "cli",
+    "express",
+    "fastify",
+    "hono",
+    "typescript",
+    "backend",
+    "boilerplate",
+    "starter",
+    "prisma",
+    "zod",
+    "enterprise",
+    "rest-api",
+    "nodejs",
+    "project-generator"
+  ],
+  "author": "Anil Kumar <anilachary67@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/theinfyark/node-gen.git"
+  },
+  "bugs": {
+    "url": "https://github.com/theinfyark/node-gen/issues"
+  },
+  "homepage": "https://github.com/theinfyark/node-gen#readme",
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/anilachary"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@clack/prompts": "^0.11.0",
+    "node-cli-banner": "^1.0.1",
+    "picocolors": "^1.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.30",
+    "tsup": "^8.5.0",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.3"
+  }
+}

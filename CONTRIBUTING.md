@@ -1,0 +1,30 @@
+# Contributing
+
+Thanks for contributing to **node-gen**.
+
+## Setup
+
+```bash
+npm install
+npm test
+npm run typecheck
+npm run build
+```
+
+## Guidelines
+
+- TypeScript strict mode
+- Keep the plugin interface stable
+- Add tests for new generators / plugins
+- Do not commit secrets
+
+## Pull requests
+
+1. Fork and branch from `main`
+2. Keep changes focused
+3. Ensure CI is green
+4. Describe what and why in the PR
+
+## Code of conduct
+
+Be respectful. See [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md).
