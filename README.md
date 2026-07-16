@@ -1,10 +1,12 @@
-# node-gen
+# node-gen-kit
 
 ## Introduction
 
-**node-gen** is an interactive CLI that scaffolds **production-ready Node.js backends** — comparable to `create-next-app`, focused on enterprise APIs.
+**node-gen-kit** (`node-gen` CLI) is an interactive generator that scaffolds **production-ready Node.js backends** — comparable to `create-next-app`, focused on enterprise APIs.
 
 ```bash
+npx node-gen-kit
+# or
 npx node-gen
 ```
 
@@ -15,9 +17,9 @@ Most Node starters are either too minimal or dump an empty enterprise folder tre
 ## Installation
 
 ```bash
-npm install -g node-gen
+npm install -g node-gen-kit
 # or
-npx node-gen
+npx node-gen-kit
 ```
 
 Requires Node.js 18+.
@@ -40,19 +42,19 @@ Requires Node.js 18+.
 ### Interactive
 
 ```bash
-npx node-gen
+npx node-gen-kit
 ```
 
 ### Non-interactive defaults (Express + TypeScript)
 
 ```bash
-npx node-gen my-api --yes
+npx node-gen-kit my-api --yes
 ```
 
 ### TypeScript (programmatic)
 
 ```ts
-import { createProject, defaultConfig } from "node-gen";
+import { createProject, defaultConfig } from "node-gen-kit";
 
 await createProject(
   defaultConfig({
@@ -82,7 +84,7 @@ await createProject(
 ### JavaScript
 
 ```js
-import { createProject, defaultConfig } from "node-gen";
+import { createProject, defaultConfig } from "node-gen-kit";
 
 await createProject(
   defaultConfig({
@@ -155,7 +157,7 @@ Register a custom generator plugin (`id`, `applies`, `apply`).
 ### Express + JWT + Zod
 
 ```bash
-npx node-gen shop-api --yes --framework express
+npx node-gen-kit shop-api --yes --framework express
 ```
 
 Then enable auth in prompts, or use the programmatic API with `features.auth: "jwt"`.
