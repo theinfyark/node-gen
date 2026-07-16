@@ -1,5 +1,5 @@
 {
-  "name": "node-gen",
+  "name": "node-gen-kit",
   "version": "1.0.0",
   "description": "Interactive CLI to scaffold production-ready Node.js backends — Express, Fastify, Hono, TypeScript, Zod, Prisma, Docker, and CI.",
   "type": "module",
@@ -7,7 +7,8 @@
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "bin": {
-    "node-gen": "./dist/cli.js"
+    "node-gen": "./dist/cli.js",
+    "node-gen-kit": "./dist/cli.js"
   },
   "exports": {
     ".": {
@@ -33,6 +34,7 @@
   },
   "keywords": [
     "node-gen",
+    "node-gen-kit",
     "create-node-app",
     "scaffold",
     "generator",

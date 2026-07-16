@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Published as `node-gen-kit` (CLI bin remains `node-gen`; npm rejected bare `node-gen` as too similar to `nodegen`)
 - Interactive CLI to scaffold enterprise Node.js backends
 - Frameworks: Express, Fastify, Hono
 - TypeScript and JavaScript, ESM and CJS
