@@ -241,7 +241,7 @@ function envConfigSource(config: ProjectConfig): string {
   const typeExport =
     config.language === 'ts' ? `\nexport type AppEnv = typeof appEnv;\n` : '';
   return `import { config as loadEnv } from 'dotenv';
-import { env, Port } from 'env-ok';
+import { env, Port } from 'env-ok-kit';
 
 loadEnv({ path: process.env.ENV_FILE ?? '.env.local' });
 

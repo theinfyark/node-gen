@@ -1,11 +1,11 @@
-# node-gen
+# node-gen-kit
 
 ## Introduction
 
-**node-gen** (`node-gen` CLI) scaffolds production-ready Node.js backends — comparable to `create-next-app`, focused on enterprise APIs.
+**node-gen-kit** (`node-gen` CLI) scaffolds production-ready Node.js backends — comparable to `create-next-app`, focused on enterprise APIs.
 
 ```bash
-npx node-gen
+npx node-gen-kit
 # or
 npx node-gen
 ```
@@ -30,7 +30,7 @@ npx node-gen
 | **Testing**          | Vitest, Jest, Mocha + Chai                                 |
 | **Ops**              | Docker, docker-compose, GitHub Actions, Dependabot, CodeQL |
 | **Security**         | Helmet / secure headers, CORS, compression, rate limiting  |
-| **Env**              | Multi-env files + `env-ok` validation                  |
+| **Env**              | Multi-env files + `env-ok-kit` validation                  |
 | **Architecture**     | Layered modules (routes → services → store)                |
 
 ## Why this package exists
@@ -40,7 +40,7 @@ Most Node starters are either too minimal or dump an empty enterprise folder tre
 ## Installation
 
 ```bash
-npm install -g node-gen
+npm install -g node-gen-kit
 # or
 npx node-gen
 ```
@@ -52,13 +52,13 @@ Requires Node.js 18+.
 ### Interactive
 
 ```bash
-npx node-gen
+npx node-gen-kit
 ```
 
 ### Non-interactive defaults (Express + TypeScript)
 
 ```bash
-npx node-gen my-api --yes
+npx node-gen-kit my-api --yes
 ```
 
 ### TypeScript (programmatic)
@@ -136,7 +136,7 @@ Options:
 ```
 src/
   app/           # bootstrap + middleware pipeline
-  config/        # env-ok validation
+  config/        # env-ok-kit validation
   modules/       # feature modules (routes → services → store)
   middleware/
   health/
@@ -168,7 +168,7 @@ Register a custom generator plugin (`id`, `applies`, `apply`).
 ### Express + JWT + Swagger
 
 ```bash
-npx node-gen shop-api --yes --framework express
+npx node-gen-kit shop-api --yes --framework express
 ```
 
 Then enable auth and Swagger in prompts, or use the programmatic API with `features.auth: "jwt"` and `features.docs: "swagger"`.
