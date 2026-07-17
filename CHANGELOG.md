@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.2] - 2026-07-17
+
+### Added
+
+- Auth providers: Auth0, Okta, Keycloak (JWKS bearer verification via `jose`)
+- Validation: Joi (alongside Zod)
+- Logger: Winston (alongside Pino / structured-logger-kit)
+
+### Changed
+
+- `features.validation` is now `"none" | "zod" | "joi"` (was boolean)
+
 ## [1.1.1] - 2026-07-17
 
 ### Added

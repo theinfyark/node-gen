@@ -19,4 +19,5 @@ export type {
   CacheChoice,
   DocsChoice,
   TestRunner,
+  ValidationChoice,
 } from "./core/types.js";

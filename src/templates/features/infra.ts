@@ -1,6 +1,6 @@
-import type { ProjectConfig, GeneratedFile, DepMap } from "../../core/types.js";
-import { ver } from "../../core/versions.js";
-import { ext } from "../../utils/helpers.js";
+import type { ProjectConfig, GeneratedFile, DepMap } from '../../core/types.js';
+import { ver } from '../../core/versions.js';
+import { ext } from '../../utils/helpers.js';
 
 /** Docker image tag for the selected Node version. */
 function dockerNodeTag(version: string): string {
@@ -9,7 +9,7 @@ function dockerNodeTag(version: string): string {
 
 /** GitHub Actions setup-node version (exact pin or major.x). */
 function ciNodeVersion(version: string): string {
-  const parts = version.split(".");
+  const parts = version.split('.');
   return parts.length >= 3 ? version : `${version}.x`;
 }
 
@@ -37,38 +37,40 @@ function openApiDoc(projectName: string): string {
 
 export function docsDeps(config: ProjectConfig): DepMap {
   const docs = config.features.docs;
-  if (docs === "none") return {};
+  if (docs === 'none') return {};
 
-  if (config.framework === "express") {
-    if (docs === "scalar") {
-      return { "@scalar/express-api-reference": ver("@scalar/express-api-reference") };
+  if (config.framework === 'express') {
+    if (docs === 'scalar') {
+      return {
+        '@scalar/express-api-reference': ver('@scalar/express-api-reference'),
+      };
     }
-    return { "swagger-ui-express": ver("swagger-ui-express") };
+    return { 'swagger-ui-express': ver('swagger-ui-express') };
   }
 
-  if (config.framework === "fastify") {
+  if (config.framework === 'fastify') {
     return {
-      "@fastify/swagger": ver("@fastify/swagger"),
-      "@fastify/swagger-ui": ver("@fastify/swagger-ui"),
+      '@fastify/swagger': ver('@fastify/swagger'),
+      '@fastify/swagger-ui': ver('@fastify/swagger-ui'),
     };
   }
 
-  if (config.framework === "koa") {
-    return { "koa2-swagger-ui": ver("koa2-swagger-ui") };
+  if (config.framework === 'koa') {
+    return { 'koa2-swagger-ui': ver('koa2-swagger-ui') };
   }
 
   return {};
 }
 
 export function docsFiles(config: ProjectConfig): GeneratedFile[] {
-  if (config.features.docs === "none") return [];
+  if (config.features.docs === 'none') return [];
   const e = ext(config.language);
-  const ts = config.language === "ts";
+  const ts = config.language === 'ts';
   const docs = config.features.docs;
   const doc = openApiDoc(config.projectName);
 
-  if (config.framework === "express") {
-    if (docs === "scalar") {
+  if (config.framework === 'express') {
+    if (docs === 'scalar') {
       return [
         {
           path: `src/docs/openapi.${e}`,
@@ -77,7 +79,7 @@ import { apiReference } from '@scalar/express-api-reference';
 
 const openApiDoc = ${doc};
 
-export function mountDocs(app${ts ? ": Express" : ""}) {
+export function mountDocs(app${ts ? ': Express' : ''}) {
   app.get('/openapi.json', (_req, res) => res.json(openApiDoc));
   app.use('/docs', apiReference({ spec: { content: openApiDoc } }));
 }
@@ -94,7 +96,7 @@ import swaggerUi from 'swagger-ui-express';
 
 const openApiDoc = ${doc};
 
-export function mountDocs(app${ts ? ": Express" : ""}) {
+export function mountDocs(app${ts ? ': Express' : ''}) {
   app.get('/openapi.json', (_req, res) => res.json(openApiDoc));
   app.use('/docs', swaggerUi.serve, swaggerUi.setup(openApiDoc));
 }
@@ -103,14 +105,14 @@ export function mountDocs(app${ts ? ": Express" : ""}) {
     ];
   }
 
-  if (config.framework === "fastify") {
+  if (config.framework === 'fastify') {
     return [
       {
         path: `src/docs/openapi.${e}`,
-        content: `${ts ? "import type { FastifyInstance } from 'fastify';\n" : ""}import swagger from '@fastify/swagger';
+        content: `${ts ? "import type { FastifyInstance } from 'fastify';\n" : ''}import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
 
-export async function registerDocs(app${ts ? ": FastifyInstance" : ""}) {
+export async function registerDocs(app${ts ? ': FastifyInstance' : ''}) {
   await app.register(swagger, {
     openapi: {
       info: { title: '${config.projectName} API', version: '1.0.0' },
@@ -123,7 +125,7 @@ export async function registerDocs(app${ts ? ": FastifyInstance" : ""}) {
     ];
   }
 
-  if (config.framework === "koa") {
+  if (config.framework === 'koa') {
     return [
       {
         path: `src/docs/openapi.${e}`,
@@ -131,8 +133,8 @@ export async function registerDocs(app${ts ? ": FastifyInstance" : ""}) {
 
 const openApiDoc = ${doc};
 
-export function mountDocs(router${ts ? ": { get: Function }" : ""}) {
-  router.get('/openapi.json', (ctx${ts ? ": { body: unknown }" : ""}) => {
+export function mountDocs(router${ts ? ': { get: Function }' : ''}) {
+  router.get('/openapi.json', (ctx${ts ? ': { body: unknown }' : ''}) => {
     ctx.body = openApiDoc;
   });
   router.get(
@@ -170,18 +172,18 @@ export function dockerFiles(config: ProjectConfig): GeneratedFile[] {
   if (!config.features.docker) return [];
   return [
     {
-      path: "Dockerfile",
+      path: 'Dockerfile',
       content: `FROM node:${dockerNodeTag(config.nodeVersion)} AS base
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci --omit=dev
 COPY . .
-${config.language === "ts" ? "RUN npm run build\n" : ""}EXPOSE ${config.port}
+${config.language === 'ts' ? 'RUN npm run build\n' : ''}EXPOSE ${config.port}
 CMD ["npm", "start"]
 `,
     },
     {
-      path: ".dockerignore",
+      path: '.dockerignore',
       content: `node_modules
 dist
 .git
@@ -192,7 +194,7 @@ tests
 `,
     },
     {
-      path: "docker-compose.yml",
+      path: 'docker-compose.yml',
       content: `services:
   app:
     build: .
@@ -201,9 +203,10 @@ tests
     env_file:
       - .env.local
     depends_on:
-${config.features.database === "postgresql" ? "      - postgres\n" : ""}${config.features.database === "mongodb" ? "      - mongo\n" : ""}${config.features.cache === "redis" ? "      - redis\n" : ""}
-${config.features.database === "postgresql"
-  ? `  postgres:
+${config.features.database === 'postgresql' ? '      - postgres\n' : ''}${config.features.database === 'mongodb' ? '      - mongo\n' : ''}${config.features.cache === 'redis' ? '      - redis\n' : ''}
+${
+  config.features.database === 'postgresql'
+    ? `  postgres:
     image: postgres:16-alpine
     environment:
       POSTGRES_PASSWORD: postgres
@@ -211,19 +214,24 @@ ${config.features.database === "postgresql"
     ports:
       - "5432:5432"
 `
-  : ""}${config.features.database === "mongodb"
-  ? `  mongo:
+    : ''
+}${
+        config.features.database === 'mongodb'
+          ? `  mongo:
     image: mongo:7
     ports:
       - "27017:27017"
 `
-  : ""}${config.features.cache === "redis"
-  ? `  redis:
+          : ''
+      }${
+        config.features.cache === 'redis'
+          ? `  redis:
     image: redis:7-alpine
     ports:
       - "6379:6379"
 `
-  : ""}`,
+          : ''
+      }`,
     },
   ];
 }
@@ -231,11 +239,11 @@ ${config.features.database === "postgresql"
 export function ciFiles(config: ProjectConfig): GeneratedFile[] {
   if (!config.features.ci) return [];
   const pm = config.packageManager;
-  const install = pm === "npm" ? "npm ci" : `${pm} install`;
-  const test = pm === "npm" ? "npm test" : `${pm} test`;
+  const install = pm === 'npm' ? 'npm ci' : `${pm} install`;
+  const test = pm === 'npm' ? 'npm test' : `${pm} test`;
   return [
     {
-      path: ".github/workflows/ci.yml",
+      path: '.github/workflows/ci.yml',
       content: `name: CI
 
 on:
@@ -258,16 +266,16 @@ jobs:
       - run: ${install}
       - run: ${test}
       - name: Typecheck
-        run: ${pm === "npm" ? "npm run typecheck --if-present" : `${pm} run typecheck`}
+        run: ${pm === 'npm' ? 'npm run typecheck --if-present' : `${pm} run typecheck`}
       - name: Build
-        run: ${pm === "npm" ? "npm run build --if-present" : `${pm} run build`}
+        run: ${pm === 'npm' ? 'npm run build --if-present' : `${pm} run build`}
       - name: Audit
         run: npm audit --audit-level=high
         continue-on-error: true
 `,
     },
     {
-      path: ".github/dependabot.yml",
+      path: '.github/dependabot.yml',
       content: `version: 2
 updates:
   - package-ecosystem: npm
@@ -281,7 +289,7 @@ updates:
 `,
     },
     {
-      path: ".github/workflows/codeql.yml",
+      path: '.github/workflows/codeql.yml',
       content: `name: CodeQL
 
 on:

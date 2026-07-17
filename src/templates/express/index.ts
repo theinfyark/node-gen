@@ -241,7 +241,7 @@ ${auth ? "  api.use('/auth', authRouter);\n" : ""}  app.use(\`\${appEnv.API_PREF
 function itemsModuleExpress(config: ProjectConfig): GeneratedFile[] {
   const e = ext(config.language);
   const ts = config.language === "ts";
-  const zod = config.features.validation;
+  const hasValidation = config.features.validation !== "none";
 
   const files: GeneratedFile[] = [
     {
@@ -382,61 +382,12 @@ export const itemsService = {
     },
   ];
 
-  if (zod) {
-    files.push({
-      path: `src/modules/items/items.schema.${e}`,
-      content: `import { z } from 'zod';
-
-export const createItemSchema = z.object({
-  name: z.string().min(1).max(120),
-  description: z.string().max(500).optional(),
-});
-
-export const updateItemSchema = createItemSchema.partial();
-`,
-    });
-    files.push({
-      path: `src/middleware/validate.${e}`,
-      content: ts
-        ? `import type { Request, Response, NextFunction } from 'express';
-import type { ZodSchema } from 'zod';
-import { ValidationError } from '../lib/errors.js';
-
-export function validateBody(schema: ZodSchema) {
-  return (req: Request, _res: Response, next: NextFunction): void => {
-    const parsed = schema.safeParse(req.body);
-    if (!parsed.success) {
-      next(new ValidationError('Validation failed', parsed.error.flatten()));
-      return;
-    }
-    req.body = parsed.data;
-    next();
-  };
-}
-`
-        : `import { ValidationError } from '../lib/errors.js';
-
-export function validateBody(schema) {
-  return (req, _res, next) => {
-    const parsed = schema.safeParse(req.body);
-    if (!parsed.success) {
-      next(new ValidationError('Validation failed', parsed.error.flatten()));
-      return;
-    }
-    req.body = parsed.data;
-    next();
-  };
-}
-`,
-    });
-  }
-
   files.push({
     path: `src/modules/items/items.route.${e}`,
     content: ts
       ? `import { Router } from 'express';
 import { itemsService } from './items.service.js';
-${zod ? "import { validateBody } from '../../middleware/validate.js';\nimport { createItemSchema, updateItemSchema } from './items.schema.js';\n" : ""}
+${hasValidation ? "import { validateBody } from '../../middleware/validate.js';\nimport { createItemSchema, updateItemSchema } from './items.schema.js';\n" : ""}
 export const itemsRouter = Router();
 
 itemsRouter.get('/', (_req, res) => {
@@ -451,7 +402,7 @@ itemsRouter.get('/:id', (req, res, next) => {
   }
 });
 
-itemsRouter.post('/'${zod ? ", validateBody(createItemSchema)" : ""}, (req, res, next) => {
+itemsRouter.post('/'${hasValidation ? ", validateBody(createItemSchema)" : ""}, (req, res, next) => {
   try {
     const item = itemsService.create(req.body);
     res.status(201).json({ success: true, data: item });
@@ -460,7 +411,7 @@ itemsRouter.post('/'${zod ? ", validateBody(createItemSchema)" : ""}, (req, res,
   }
 });
 
-itemsRouter.patch('/:id'${zod ? ", validateBody(updateItemSchema)" : ""}, (req, res, next) => {
+itemsRouter.patch('/:id'${hasValidation ? ", validateBody(updateItemSchema)" : ""}, (req, res, next) => {
   try {
     const item = itemsService.update(req.params.id, req.body);
     res.json({ success: true, data: item });
@@ -480,7 +431,7 @@ itemsRouter.delete('/:id', (req, res, next) => {
 `
       : `import { Router } from 'express';
 import { itemsService } from './items.service.js';
-${zod ? "import { validateBody } from '../../middleware/validate.js';\nimport { createItemSchema, updateItemSchema } from './items.schema.js';\n" : ""}
+${hasValidation ? "import { validateBody } from '../../middleware/validate.js';\nimport { createItemSchema, updateItemSchema } from './items.schema.js';\n" : ""}
 export const itemsRouter = Router();
 
 itemsRouter.get('/', (_req, res) => {
@@ -495,7 +446,7 @@ itemsRouter.get('/:id', (req, res, next) => {
   }
 });
 
-itemsRouter.post('/'${zod ? ", validateBody(createItemSchema)" : ""}, (req, res, next) => {
+itemsRouter.post('/'${hasValidation ? ", validateBody(createItemSchema)" : ""}, (req, res, next) => {
   try {
     const item = itemsService.create(req.body);
     res.status(201).json({ success: true, data: item });
@@ -504,7 +455,7 @@ itemsRouter.post('/'${zod ? ", validateBody(createItemSchema)" : ""}, (req, res,
   }
 });
 
-itemsRouter.patch('/:id'${zod ? ", validateBody(updateItemSchema)" : ""}, (req, res, next) => {
+itemsRouter.patch('/:id'${hasValidation ? ", validateBody(updateItemSchema)" : ""}, (req, res, next) => {
   try {
     const item = itemsService.update(req.params.id, req.body);
     res.json({ success: true, data: item });

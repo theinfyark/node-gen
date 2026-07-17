@@ -1,6 +1,6 @@
 {
   "name": "node-gen-kit",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Interactive CLI to scaffold production-ready Node.js backends — Express, Fastify, Hono, TypeScript, Zod, Prisma, Docker, and CI.",
   "type": "module",
   "main": "./dist/index.cjs",

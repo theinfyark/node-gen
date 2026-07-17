@@ -1,6 +1,7 @@
 import type { ProjectConfig, GeneratedFile, DepMap } from "../../core/types.js";
 import { ver } from "../../core/versions.js";
 import { ext } from "../../utils/helpers.js";
+import { inlineCreateSchema, parseBodySnippet } from "../features/validation.js";
 
 export function fastifyDeps(config: ProjectConfig): DepMap {
   const d: DepMap = { fastify: ver("fastify") };
@@ -16,7 +17,7 @@ export function fastifyDeps(config: ProjectConfig): DepMap {
 export function fastifyFiles(config: ProjectConfig): GeneratedFile[] {
   const e = ext(config.language);
   const ts = config.language === "ts";
-  const zod = config.features.validation;
+  const hasValidation = config.features.validation !== "none";
   const auth = config.features.auth !== "none";
   const docs = config.features.docs !== "none";
   const sec = config.features.security;
@@ -80,7 +81,7 @@ export const itemsStore = {
       path: `src/modules/items/items.routes.${e}`,
       content: `${ts ? "import type { FastifyInstance } from 'fastify';\n" : ""}import { itemsStore } from './items.store.js';
 import { NotFoundError } from '../../lib/errors.js';
-${zod ? "import { z } from 'zod';\n\nconst createSchema = z.object({ name: z.string().min(1), description: z.string().optional() });\n" : ""}
+${inlineCreateSchema(config)}
 export async function itemsRoutes(app${ts ? ": FastifyInstance" : ""}) {
   app.get('/items', async () => ({ success: true, data: itemsStore.list() }));
 
@@ -91,7 +92,7 @@ export async function itemsRoutes(app${ts ? ": FastifyInstance" : ""}) {
   });
 
   app.post('/items', async (req, reply) => {
-    const body = ${zod ? "createSchema.parse(req.body)" : "req.body"};
+    const body = ${parseBodySnippet(config, "req.body")};
     const item = itemsStore.create(body);
     return reply.code(201).send({ success: true, data: item });
   });

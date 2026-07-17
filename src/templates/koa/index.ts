@@ -1,6 +1,7 @@
 import type { ProjectConfig, GeneratedFile, DepMap } from "../../core/types.js";
 import { ver } from "../../core/versions.js";
 import { ext } from "../../utils/helpers.js";
+import { inlineCreateSchema, parseBodySnippet } from "../features/validation.js";
 
 export function koaDeps(config: ProjectConfig): DepMap {
   const d: DepMap = {
@@ -33,8 +34,9 @@ export function koaDevDeps(config: ProjectConfig): DepMap {
 export function koaFiles(config: ProjectConfig): GeneratedFile[] {
   const e = ext(config.language);
   const ts = config.language === "ts";
-  const zod = config.features.validation;
-  const auth = config.features.auth !== "none";
+  const hasValidation = config.features.validation !== "none";
+  const authEnabled = config.features.auth !== "none";
+  const auth = config.features.auth;
   const docs = config.features.docs !== "none";
   const sec = config.features.security;
 
@@ -98,7 +100,7 @@ export const itemsStore = {
       content: `import Router from '@koa/router';
 import { itemsStore } from './items.store.js';
 import { NotFoundError } from '../../lib/errors.js';
-${zod ? "import { z } from 'zod';\n\nconst createSchema = z.object({ name: z.string().min(1), description: z.string().optional() });\n" : ""}
+${inlineCreateSchema(config)}
 export const itemsRouter = new Router({ prefix: '/items' });
 
 itemsRouter.get('/', (ctx) => {
@@ -112,7 +114,7 @@ itemsRouter.get('/:id', (ctx) => {
 });
 
 itemsRouter.post('/', (ctx) => {
-  const body = ${zod ? "createSchema.parse(ctx.request.body)" : "ctx.request.body"};
+  const body = ${parseBodySnippet(config, "ctx.request.body")};
   const item = itemsStore.create(body);
   ctx.status = 201;
   ctx.body = { success: true, data: item };
@@ -139,7 +141,7 @@ ${sec ? "import cors from '@koa/cors';\nimport helmet from 'koa-helmet';\nimport
 import { AppError } from '../lib/errors.js';
 import { logger } from '../lib/logger.js';
 import { itemsRouter } from '../modules/items/items.routes.js';
-${auth ? "import { authRouter } from '../modules/auth/auth.routes.js';\n" : ""}${docs ? "import { mountDocs } from '../docs/openapi.js';\n" : ""}
+${authEnabled ? "import { authRouter } from '../modules/auth/auth.routes.js';\n" : ""}${docs ? "import { mountDocs } from '../docs/openapi.js';\n" : ""}
 export function createApp() {
   const app = new Koa();
   const api = new Router({ prefix: \`\${appEnv.API_PREFIX}/\${appEnv.API_VERSION}\` });
@@ -174,7 +176,7 @@ ${sec ? "  app.use(helmet());\n  app.use(cors());\n  app.use(compress());\n" : "
   });
 ${docs ? "  mountDocs(root);\n" : ""}
   api.use(itemsRouter.routes(), itemsRouter.allowedMethods());
-${auth ? "  api.use(authRouter.routes(), authRouter.allowedMethods());\n" : ""}
+${authEnabled ? "  api.use(authRouter.routes(), authRouter.allowedMethods());\n" : ""}
   app.use(root.routes()).use(root.allowedMethods());
   app.use(api.routes()).use(api.allowedMethods());
 
@@ -196,7 +198,7 @@ app.listen(appEnv.PORT, appEnv.HOST, () => {
     },
   ];
 
-  if (auth) {
+  if (auth === "jwt" || auth === "passport") {
     files.push({
       path: `src/modules/auth/auth.routes.${e}`,
       content: `import Router from '@koa/router';

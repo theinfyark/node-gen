@@ -33,6 +33,9 @@ export const VERSIONS = {
   bcryptjs: "^3.0.2",
   // validation
   zod: "^3.25.28",
+  joi: "^17.13.3",
+  // auth oidc
+  jose: "^6.0.11",
   // orm / db
   prisma: "^6.9.0",
   "@prisma/client": "^6.9.0",
@@ -49,6 +52,7 @@ export const VERSIONS = {
   pino: "^9.7.0",
   "pino-http": "^10.4.0",
   "pino-pretty": "^13.0.0",
+  winston: "^3.17.0",
   "structured-logger-kit": "^1.0.1",
   // env
   "env-ok-kit": "^1.0.2",

@@ -12,26 +12,26 @@ npx node-gen
 
 ## What this package covers
 
-| Area | Options |
-|------|---------|
-| **Languages** | TypeScript, JavaScript |
-| **Frameworks** | Express, Fastify, Hono, Koa |
-| **Module systems** | ESM, CommonJS |
-| **Package managers** | npm, pnpm, yarn, bun |
-| **Node** | v22.23.1, v24.18.0, 22 LTS, 20 LTS |
-| **API style** | REST |
-| **Auth** | JWT, Passport (local + JWT) |
-| **Validation** | Zod |
-| **Databases** | PostgreSQL, MongoDB, MySQL, SQLite |
-| **ORM** | Prisma, Drizzle, Mongoose |
-| **Cache** | Redis |
-| **Logger** | Pino, structured-logger-kit |
-| **API docs** | Swagger UI, Scalar, OpenAPI JSON |
-| **Testing** | Vitest, Jest, Mocha + Chai |
-| **Ops** | Docker, docker-compose, GitHub Actions, Dependabot, CodeQL |
-| **Security** | Helmet / secure headers, CORS, compression, rate limiting |
-| **Env** | Multi-env files + `env-ok-kit` validation |
-| **Architecture** | Layered modules (routes → services → store) |
+| Area                 | Options                                                    |
+| -------------------- | ---------------------------------------------------------- |
+| **Languages**        | TypeScript, JavaScript                                     |
+| **Frameworks**       | Express, Fastify, Hono, Koa                                |
+| **Module systems**   | ESM, CommonJS                                              |
+| **Package managers** | npm, pnpm, yarn, bun                                       |
+| **Node**             | v22.23.1, v24.18.0, 22 LTS, 20 LTS                         |
+| **API style**        | REST                                                       |
+| **Auth**             | JWT, Passport, Auth0, Okta, Keycloak                       |
+| **Validation**       | Zod, Joi                                                   |
+| **Databases**        | PostgreSQL, MongoDB, MySQL, SQLite                         |
+| **ORM**              | Prisma, Drizzle, Mongoose                                  |
+| **Cache**            | Redis                                                      |
+| **Logger**           | Pino, Winston, structured-logger-kit                       |
+| **API docs**         | Swagger UI, Scalar, OpenAPI JSON                           |
+| **Testing**          | Vitest, Jest, Mocha + Chai                                 |
+| **Ops**              | Docker, docker-compose, GitHub Actions, Dependabot, CodeQL |
+| **Security**         | Helmet / secure headers, CORS, compression, rate limiting  |
+| **Env**              | Multi-env files + `env-ok-kit` validation                  |
+| **Architecture**     | Layered modules (routes → services → store)                |
 
 ## Why this package exists
 
@@ -64,25 +64,25 @@ npx node-gen-kit my-api --yes
 ### TypeScript (programmatic)
 
 ```ts
-import { createProject, defaultConfig } from "node-gen-kit";
+import { createProject, defaultConfig } from 'node-gen-kit';
 
 await createProject(
   defaultConfig({
-    projectName: "orders-api",
-    targetDir: "./orders-api",
-    framework: "koa",
+    projectName: 'orders-api',
+    targetDir: './orders-api',
+    framework: 'koa',
     features: {
-      auth: "jwt",
+      auth: 'jwt',
       validation: true,
-      database: "postgresql",
-      orm: "prisma",
-      cache: "none",
-      logger: "pino",
-      docs: "swagger",
+      database: 'postgresql',
+      orm: 'prisma',
+      cache: 'none',
+      logger: 'pino',
+      docs: 'swagger',
       docker: true,
       ci: true,
       security: true,
-      testing: "jest",
+      testing: 'jest',
       monitoring: true,
       gitInit: true,
       githubRepo: false,
@@ -94,14 +94,14 @@ await createProject(
 ### JavaScript
 
 ```js
-import { createProject, defaultConfig } from "node-gen-kit";
+import { createProject, defaultConfig } from 'node-gen-kit';
 
 await createProject(
   defaultConfig({
-    projectName: "orders-api",
-    targetDir: "./orders-api",
-    framework: "hono",
-    language: "js",
+    projectName: 'orders-api',
+    targetDir: './orders-api',
+    framework: 'hono',
+    language: 'js',
   }),
 );
 ```
@@ -178,13 +178,13 @@ Then enable auth and Swagger in prompts, or use the programmatic API with `featu
 ```ts
 await createProject(
   defaultConfig({
-    projectName: "notes",
-    targetDir: "./notes",
-    framework: "koa",
+    projectName: 'notes',
+    targetDir: './notes',
+    framework: 'koa',
     features: {
-      ...defaultConfig({ projectName: "notes", targetDir: "./notes" }).features,
-      testing: "jest",
-      docs: "swagger",
+      ...defaultConfig({ projectName: 'notes', targetDir: './notes' }).features,
+      testing: 'jest',
+      docs: 'swagger',
     },
   }),
 );
@@ -227,11 +227,11 @@ From hand-rolled Express starters: generate a fresh project and move domain modu
 
 ## Troubleshooting
 
-| Issue | Fix |
-|-------|-----|
-| Target not empty | Choose a new folder name |
-| Install failed | Run with `--skip-install` then install manually |
-| Port in use | Change `PORT` in `.env.local` |
+| Issue            | Fix                                             |
+| ---------------- | ----------------------------------------------- |
+| Target not empty | Choose a new folder name                        |
+| Install failed   | Run with `--skip-install` then install manually |
+| Port in use      | Change `PORT` in `.env.local`                   |
 
 ## Contributing
 

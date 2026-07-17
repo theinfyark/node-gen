@@ -1,14 +1,19 @@
-import path from "node:path";
+import path from 'node:path';
 import type {
   ProjectConfig,
   GeneratedFile,
   DepMap,
   GenerateResult,
   PluginContext,
-} from "./types.js";
-import { getPlugins } from "./registry.js";
-import { writeFiles, assertTargetAvailable } from "./writer.js";
-import { runInstall, runAudit, runGitInit, tryCreateGithubRepo } from "./hooks.js";
+} from './types.js';
+import { getPlugins } from './registry.js';
+import { writeFiles, assertTargetAvailable } from './writer.js';
+import {
+  runInstall,
+  runAudit,
+  runGitInit,
+  tryCreateGithubRepo,
+} from './hooks.js';
 import {
   basePackageJson,
   gitignoreFile,
@@ -22,22 +27,45 @@ import {
   defaultScripts,
   baseDeps,
   baseDevDeps,
-} from "../templates/shared/base.js";
-import { expressDeps, expressDevDeps, expressFiles } from "../templates/express/index.js";
-import { fastifyDeps, fastifyFiles } from "../templates/fastify/index.js";
-import { honoDeps, honoFiles } from "../templates/hono/index.js";
-import { koaDeps, koaDevDeps, koaFiles } from "../templates/koa/index.js";
-import { authDeps, authDevDeps, authFiles } from "../templates/features/auth.js";
-import { ormDeps, ormDevDeps, ormFiles, redisDeps, redisFiles } from "../templates/features/orm.js";
-import { docsDeps, docsFiles, dockerFiles, ciFiles } from "../templates/features/infra.js";
+} from '../templates/shared/base.js';
+import {
+  expressDeps,
+  expressDevDeps,
+  expressFiles,
+} from '../templates/express/index.js';
+import { fastifyDeps, fastifyFiles } from '../templates/fastify/index.js';
+import { honoDeps, honoFiles } from '../templates/hono/index.js';
+import { koaDeps, koaDevDeps, koaFiles } from '../templates/koa/index.js';
+import {
+  authDeps,
+  authDevDeps,
+  authFiles,
+} from '../templates/features/auth.js';
+import {
+  ormDeps,
+  ormDevDeps,
+  ormFiles,
+  redisDeps,
+  redisFiles,
+} from '../templates/features/orm.js';
+import {
+  docsDeps,
+  docsFiles,
+  dockerFiles,
+  ciFiles,
+} from '../templates/features/infra.js';
 import {
   testingDevDeps,
   testingScripts,
   testingConfigFiles,
   healthTestFile,
-} from "../templates/features/testing.js";
-import { ver } from "./versions.js";
-import { registerBuiltinPlugins } from "../plugins/index.js";
+} from '../templates/features/testing.js';
+import {
+  validationDeps,
+  expressValidationFiles,
+} from '../templates/features/validation.js';
+import { ver } from './versions.js';
+import { registerBuiltinPlugins } from '../plugins/index.js';
 
 let builtinsRegistered = false;
 
@@ -72,33 +100,84 @@ function collectCoreFiles(config: ProjectConfig): {
   files.push(loggerFile(config));
   files.push(...testingConfigFiles(config));
 
-  if (config.features.validation) {
-    deps.zod = ver("zod");
+  if (config.features.validation !== 'none') {
+    deps = mergeDeps(deps, validationDeps(config));
   }
 
   if (
-    config.language === "ts" &&
-    config.framework === "express" &&
-    (config.features.docs === "swagger" || config.features.docs === "openapi")
+    config.language === 'ts' &&
+    config.framework === 'express' &&
+    (config.features.docs === 'swagger' || config.features.docs === 'openapi')
   ) {
-    devDeps["@types/swagger-ui-express"] = ver("@types/swagger-ui-express");
+    devDeps['@types/swagger-ui-express'] = ver('@types/swagger-ui-express');
   }
 
-  if (config.framework === "express") {
-    deps = mergeDeps(deps, expressDeps(config), authDeps(config), ormDeps(config), redisDeps(config), docsDeps(config));
-    devDeps = mergeDeps(devDeps, expressDevDeps(config), authDevDeps(config), ormDevDeps(config), testingDevDeps(config));
+  if (config.framework === 'express') {
+    deps = mergeDeps(
+      deps,
+      expressDeps(config),
+      authDeps(config),
+      ormDeps(config),
+      redisDeps(config),
+      docsDeps(config),
+    );
+    devDeps = mergeDeps(
+      devDeps,
+      expressDevDeps(config),
+      authDevDeps(config),
+      ormDevDeps(config),
+      testingDevDeps(config),
+    );
     files.push(...expressFiles(config));
-  } else if (config.framework === "fastify") {
-    deps = mergeDeps(deps, fastifyDeps(config), authDeps(config), ormDeps(config), redisDeps(config), docsDeps(config));
-    devDeps = mergeDeps(devDeps, authDevDeps(config), ormDevDeps(config), testingDevDeps(config));
+    files.push(...expressValidationFiles(config));
+  } else if (config.framework === 'fastify') {
+    deps = mergeDeps(
+      deps,
+      fastifyDeps(config),
+      authDeps(config),
+      ormDeps(config),
+      redisDeps(config),
+      docsDeps(config),
+    );
+    devDeps = mergeDeps(
+      devDeps,
+      authDevDeps(config),
+      ormDevDeps(config),
+      testingDevDeps(config),
+    );
     files.push(...fastifyFiles(config));
-  } else if (config.framework === "koa") {
-    deps = mergeDeps(deps, koaDeps(config), authDeps(config), ormDeps(config), redisDeps(config), docsDeps(config));
-    devDeps = mergeDeps(devDeps, koaDevDeps(config), authDevDeps(config), ormDevDeps(config), testingDevDeps(config));
+  } else if (config.framework === 'koa') {
+    deps = mergeDeps(
+      deps,
+      koaDeps(config),
+      authDeps(config),
+      ormDeps(config),
+      redisDeps(config),
+      docsDeps(config),
+    );
+    devDeps = mergeDeps(
+      devDeps,
+      koaDevDeps(config),
+      authDevDeps(config),
+      ormDevDeps(config),
+      testingDevDeps(config),
+    );
     files.push(...koaFiles(config));
   } else {
-    deps = mergeDeps(deps, honoDeps(config), authDeps(config), ormDeps(config), redisDeps(config), docsDeps(config));
-    devDeps = mergeDeps(devDeps, authDevDeps(config), ormDevDeps(config), testingDevDeps(config));
+    deps = mergeDeps(
+      deps,
+      honoDeps(config),
+      authDeps(config),
+      ormDeps(config),
+      redisDeps(config),
+      docsDeps(config),
+    );
+    devDeps = mergeDeps(
+      devDeps,
+      authDevDeps(config),
+      ormDevDeps(config),
+      testingDevDeps(config),
+    );
     files.push(...honoFiles(config));
   }
 
@@ -114,7 +193,7 @@ function collectCoreFiles(config: ProjectConfig): {
 
   // OSS docs for generated project
   files.push({
-    path: "LICENSE",
+    path: 'LICENSE',
     content: `MIT License
 
 Copyright (c) ${new Date().getFullYear()}
@@ -139,7 +218,7 @@ SOFTWARE.
 `,
   });
   files.push({
-    path: "CHANGELOG.md",
+    path: 'CHANGELOG.md',
     content: `# Changelog
 
 ## [1.0.0] - ${new Date().toISOString().slice(0, 10)}
@@ -154,7 +233,9 @@ SOFTWARE.
 }
 
 /** Programmatic project generation. */
-export async function createProject(config: ProjectConfig): Promise<GenerateResult> {
+export async function createProject(
+  config: ProjectConfig,
+): Promise<GenerateResult> {
   ensurePlugins();
   assertTargetAvailable(config.targetDir, Boolean(config.dryRun));
 
@@ -172,10 +253,10 @@ export async function createProject(config: ProjectConfig): Promise<GenerateResu
     addFile: (file) => {
       fileMap.set(file.path, file);
     },
-    addDependency: (name, version = "latest") => {
+    addDependency: (name, version = 'latest') => {
       depMap[name] = version;
     },
-    addDevDependency: (name, version = "latest") => {
+    addDevDependency: (name, version = 'latest') => {
       devDepMap[name] = version;
     },
     addScript: (name, command) => {
@@ -191,7 +272,7 @@ export async function createProject(config: ProjectConfig): Promise<GenerateResu
 
   // package.json last so plugins can mutate deps/scripts
   fileMap.set(
-    "package.json",
+    'package.json',
     basePackageJson(config, depMap, devDepMap, scriptMap),
   );
 
@@ -227,27 +308,30 @@ export async function createProject(config: ProjectConfig): Promise<GenerateResu
   };
 }
 
-export function defaultConfig(partial: Partial<ProjectConfig> & Pick<ProjectConfig, "projectName" | "targetDir">): ProjectConfig {
+export function defaultConfig(
+  partial: Partial<ProjectConfig> &
+    Pick<ProjectConfig, 'projectName' | 'targetDir'>,
+): ProjectConfig {
   return {
-    language: "ts",
-    framework: "express",
-    packageManager: "npm",
-    moduleSystem: "esm",
-    nodeVersion: "22.23.1",
+    language: 'ts',
+    framework: 'express',
+    packageManager: 'npm',
+    moduleSystem: 'esm',
+    nodeVersion: '22.23.1',
     port: 3000,
-    architecture: "layered",
+    architecture: 'layered',
     features: {
-      auth: "none",
-      validation: true,
-      database: "none",
-      orm: "none",
-      cache: "none",
-      logger: "pino",
-      docs: "none",
+      auth: 'none',
+      validation: 'zod',
+      database: 'none',
+      orm: 'none',
+      cache: 'none',
+      logger: 'pino',
+      docs: 'none',
       docker: false,
       ci: true,
       security: true,
-      testing: "vitest",
+      testing: 'vitest',
       monitoring: true,
       gitInit: true,
       githubRepo: false,

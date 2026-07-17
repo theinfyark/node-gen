@@ -1,6 +1,7 @@
 import type { ProjectConfig, GeneratedFile, DepMap } from "../../core/types.js";
 import { ver } from "../../core/versions.js";
 import { ext } from "../../utils/helpers.js";
+import { inlineCreateSchema, parseBodySnippet } from "../features/validation.js";
 
 export function honoDeps(_config: ProjectConfig): DepMap {
   return {
@@ -12,7 +13,7 @@ export function honoDeps(_config: ProjectConfig): DepMap {
 export function honoFiles(config: ProjectConfig): GeneratedFile[] {
   const e = ext(config.language);
   const ts = config.language === "ts";
-  const zod = config.features.validation;
+  const hasValidation = config.features.validation !== "none";
   const auth = config.features.auth !== "none";
   const docs = config.features.docs !== "none";
 
@@ -76,7 +77,7 @@ export const itemsStore = {
       content: `import { Hono } from 'hono';
 import { itemsStore } from './items.store.js';
 import { NotFoundError } from '../../lib/errors.js';
-${zod ? "import { z } from 'zod';\n\nconst createSchema = z.object({ name: z.string().min(1), description: z.string().optional() });\n" : ""}
+${inlineCreateSchema(config)}
 export const itemsRoutes = new Hono();
 
 itemsRoutes.get('/', (c) => c.json({ success: true, data: itemsStore.list() }));
@@ -88,7 +89,7 @@ itemsRoutes.get('/:id', (c) => {
 });
 
 itemsRoutes.post('/', async (c) => {
-  const body = ${zod ? "createSchema.parse(await c.req.json())" : "await c.req.json()"};
+  const body = ${parseBodySnippet(config, "await c.req.json()")};
   const item = itemsStore.create(body);
   return c.json({ success: true, data: item }, 201);
 });
