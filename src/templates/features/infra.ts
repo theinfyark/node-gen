@@ -2,6 +2,17 @@ import type { ProjectConfig, GeneratedFile, DepMap } from "../../core/types.js";
 import { ver } from "../../core/versions.js";
 import { ext } from "../../utils/helpers.js";
 
+/** Docker image tag for the selected Node version. */
+function dockerNodeTag(version: string): string {
+  return `${version}-alpine`;
+}
+
+/** GitHub Actions setup-node version (exact pin or major.x). */
+function ciNodeVersion(version: string): string {
+  const parts = version.split(".");
+  return parts.length >= 3 ? version : `${version}.x`;
+}
+
 function openApiDoc(projectName: string): string {
   return `{
   openapi: '3.1.0',
@@ -160,7 +171,7 @@ export function dockerFiles(config: ProjectConfig): GeneratedFile[] {
   return [
     {
       path: "Dockerfile",
-      content: `FROM node:${config.nodeVersion}-alpine AS base
+      content: `FROM node:${dockerNodeTag(config.nodeVersion)} AS base
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci --omit=dev
@@ -238,7 +249,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [${config.nodeVersion}.x]
+        node-version: [${ciNodeVersion(config.nodeVersion)}]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

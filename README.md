@@ -18,7 +18,7 @@ npx node-gen
 | **Frameworks** | Express, Fastify, Hono, Koa |
 | **Module systems** | ESM, CommonJS |
 | **Package managers** | npm, pnpm, yarn, bun |
-| **Node** | 20 LTS, 22 LTS |
+| **Node** | v22.23.1, v24.18.0, 22 LTS, 20 LTS |
 | **API style** | REST |
 | **Auth** | JWT, Passport (local + JWT) |
 | **Validation** | Zod |

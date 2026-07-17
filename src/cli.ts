@@ -6,7 +6,7 @@ import { createProject, defaultConfig } from "./core/generator.js";
 import type { ProjectConfig } from "./core/types.js";
 import path from "node:path";
 
-const VERSION = "1.1.0";
+const VERSION = "1.1.1";
 
 function printHelp(): void {
   console.log(`node-gen — Enterprise Node.js backend generator

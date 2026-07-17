@@ -81,8 +81,10 @@ export async function runPrompts(cwd = process.cwd()): Promise<ProjectConfig> {
   const nodeVersion = await p.select({
     message: "Node.js version",
     options: [
-      { value: "22", label: "22 LTS", hint: "recommended" },
-      { value: "20", label: "20 LTS" },
+      { value: "22.23.1", label: "v22.23.1", hint: "recommended" },
+      { value: "24.18.0", label: "v24.18.0" },
+      { value: "22", label: "22 LTS (major)" },
+      { value: "20", label: "20 LTS (major)" },
     ],
   });
   isCancel(nodeVersion);

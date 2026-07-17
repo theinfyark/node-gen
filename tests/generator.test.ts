@@ -97,20 +97,32 @@ describe("createProject", () => {
     rmSync(root, { recursive: true, force: true });
   });
 
-  it("dry-run does not write files", async () => {
+  it("pins Node v22.23.1 and v24.18.0 in engines and Docker", async () => {
     const root = mkdtempSync(path.join(tmpdir(), "node-gen-"));
-    const targetDir = path.join(root, "dry");
-    const result = await createProject(
-      defaultConfig({
-        projectName: "dry",
-        targetDir,
-        dryRun: true,
-        skipInstall: true,
-        skipGit: true,
-      }),
-    );
-    expect(result.files.length).toBeGreaterThan(5);
-    expect(existsSync(path.join(targetDir, "package.json"))).toBe(false);
+    for (const nodeVersion of ["22.23.1", "24.18.0"] as const) {
+      const targetDir = path.join(root, nodeVersion);
+      await createProject(
+        defaultConfig({
+          projectName: `node-${nodeVersion.replace(/\./g, "-")}`,
+          targetDir,
+          nodeVersion,
+          skipInstall: true,
+          skipGit: true,
+          features: {
+            ...defaultConfig({ projectName: "x", targetDir: "/tmp/x" }).features,
+            docker: true,
+            ci: true,
+            gitInit: false,
+          },
+        }),
+      );
+      const pkg = JSON.parse(readFileSync(path.join(targetDir, "package.json"), "utf8"));
+      expect(pkg.engines.node).toBe(`>=${nodeVersion}`);
+      const docker = readFileSync(path.join(targetDir, "Dockerfile"), "utf8");
+      expect(docker).toContain(`FROM node:${nodeVersion}-alpine`);
+      const ci = readFileSync(path.join(targetDir, ".github/workflows/ci.yml"), "utf8");
+      expect(ci).toContain(`node-version: [${nodeVersion}]`);
+    }
     rmSync(root, { recursive: true, force: true });
   });
 });

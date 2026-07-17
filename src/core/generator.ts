@@ -233,7 +233,7 @@ export function defaultConfig(partial: Partial<ProjectConfig> & Pick<ProjectConf
     framework: "express",
     packageManager: "npm",
     moduleSystem: "esm",
-    nodeVersion: "22",
+    nodeVersion: "22.23.1",
     port: 3000,
     architecture: "layered",
     features: {
