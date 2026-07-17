@@ -1,6 +1,5 @@
 # Roadmap
 
-- [ ] Koa framework plugin
 - [ ] GraphQL and gRPC API styles
 - [ ] Auth0 / Okta / Entra ID / Clerk / Firebase auth plugins
 - [ ] Joi / Yup / Valibot validation plugins
