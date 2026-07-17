@@ -1,11 +1,11 @@
-# node-gen-kit
+# node-gen
 
 ## Introduction
 
-**node-gen-kit** (`node-gen` CLI) scaffolds production-ready Node.js backends — comparable to `create-next-app`, focused on enterprise APIs.
+**node-gen** (`node-gen` CLI) scaffolds production-ready Node.js backends — comparable to `create-next-app`, focused on enterprise APIs.
 
 ```bash
-npx node-gen-kit
+npx node-gen
 # or
 npx node-gen
 ```
@@ -30,7 +30,7 @@ npx node-gen
 | **Testing**          | Vitest, Jest, Mocha + Chai                                 |
 | **Ops**              | Docker, docker-compose, GitHub Actions, Dependabot, CodeQL |
 | **Security**         | Helmet / secure headers, CORS, compression, rate limiting  |
-| **Env**              | Multi-env files + `env-ok-kit` validation                  |
+| **Env**              | Multi-env files + `env-ok` validation                  |
 | **Architecture**     | Layered modules (routes → services → store)                |
 
 ## Why this package exists
@@ -40,9 +40,9 @@ Most Node starters are either too minimal or dump an empty enterprise folder tre
 ## Installation
 
 ```bash
-npm install -g node-gen-kit
+npm install -g node-gen
 # or
-npx node-gen-kit
+npx node-gen
 ```
 
 Requires Node.js 18+.
@@ -52,19 +52,19 @@ Requires Node.js 18+.
 ### Interactive
 
 ```bash
-npx node-gen-kit
+npx node-gen
 ```
 
 ### Non-interactive defaults (Express + TypeScript)
 
 ```bash
-npx node-gen-kit my-api --yes
+npx node-gen my-api --yes
 ```
 
 ### TypeScript (programmatic)
 
 ```ts
-import { createProject, defaultConfig } from 'node-gen-kit';
+import { createProject, defaultConfig } from 'node-gen';
 
 await createProject(
   defaultConfig({
@@ -94,7 +94,7 @@ await createProject(
 ### JavaScript
 
 ```js
-import { createProject, defaultConfig } from 'node-gen-kit';
+import { createProject, defaultConfig } from 'node-gen';
 
 await createProject(
   defaultConfig({
@@ -136,7 +136,7 @@ Options:
 ```
 src/
   app/           # bootstrap + middleware pipeline
-  config/        # env-ok-kit validation
+  config/        # env-ok validation
   modules/       # feature modules (routes → services → store)
   middleware/
   health/
@@ -168,7 +168,7 @@ Register a custom generator plugin (`id`, `applies`, `apply`).
 ### Express + JWT + Swagger
 
 ```bash
-npx node-gen-kit shop-api --yes --framework express
+npx node-gen shop-api --yes --framework express
 ```
 
 Then enable auth and Swagger in prompts, or use the programmatic API with `features.auth: "jwt"` and `features.docs: "swagger"`.

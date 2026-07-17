@@ -1,21 +1,24 @@
-import type { ProjectConfig, GeneratedFile, DepMap } from "../../core/types.js";
-import { ver } from "../../core/versions.js";
-import { ext } from "../../utils/helpers.js";
-import { inlineCreateSchema, parseBodySnippet } from "../features/validation.js";
+import type { ProjectConfig, GeneratedFile, DepMap } from '../../core/types.js';
+import { ver } from '../../core/versions.js';
+import { ext } from '../../utils/helpers.js';
+import {
+  inlineCreateSchema,
+  parseBodySnippet,
+} from '../features/validation.js';
 
 export function honoDeps(_config: ProjectConfig): DepMap {
   return {
-    hono: ver("hono"),
-    "@hono/node-server": ver("@hono/node-server"),
+    hono: ver('hono'),
+    '@hono/node-server': ver('@hono/node-server'),
   };
 }
 
 export function honoFiles(config: ProjectConfig): GeneratedFile[] {
   const e = ext(config.language);
-  const ts = config.language === "ts";
-  const hasValidation = config.features.validation !== "none";
-  const auth = config.features.auth !== "none";
-  const docs = config.features.docs !== "none";
+  const ts = config.language === 'ts';
+  const hasValidation = config.features.validation !== 'none';
+  const auth = config.features.auth !== 'none';
+  const docs = config.features.docs !== 'none';
 
   const files: GeneratedFile[] = [
     {
@@ -89,7 +92,7 @@ itemsRoutes.get('/:id', (c) => {
 });
 
 itemsRoutes.post('/', async (c) => {
-  const body = ${parseBodySnippet(config, "await c.req.json()")};
+  const body = ${parseBodySnippet(config, 'await c.req.json()')};
   const item = itemsStore.create(body);
   return c.json({ success: true, data: item }, 201);
 });
@@ -115,7 +118,7 @@ import { logger as honoLogger } from 'hono/logger';
 import { appEnv } from '../config/env.js';
 import { AppError } from '../lib/errors.js';
 import { itemsRoutes } from '../modules/items/items.routes.js';
-${auth ? "import { authRoutes } from '../modules/auth/auth.routes.js';\n" : ""}${docs ? "import { docsRoutes } from '../docs/openapi.js';\n" : ""}
+${auth ? "import { authRoutes } from '../modules/auth/auth.routes.js';\n" : ''}${docs ? "import { docsRoutes } from '../docs/openapi.js';\n" : ''}
 export function createApp() {
   const app = new Hono();
 
@@ -131,14 +134,14 @@ export function createApp() {
     }),
   );
 
-${docs ? "  app.route('/docs', docsRoutes);\n" : ""}
+${docs ? "  app.route('/docs', docsRoutes);\n" : ''}
   app.route(\`\${appEnv.API_PREFIX}/\${appEnv.API_VERSION}/items\`, itemsRoutes);
-${auth ? "  app.route(`${appEnv.API_PREFIX}/${appEnv.API_VERSION}/auth`, authRoutes);\n" : ""}
+${auth ? '  app.route(`${appEnv.API_PREFIX}/${appEnv.API_VERSION}/auth`, authRoutes);\n' : ''}
   app.onError((err, c) => {
     if (err instanceof AppError) {
       return c.json(
         { success: false, error: { code: err.code, message: err.message } },
-        ${ts ? "err.statusCode as 400" : "err.statusCode"},
+        ${ts ? 'err.statusCode as 400' : 'err.statusCode'},
       );
     }
     return c.json(

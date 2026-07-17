@@ -225,7 +225,7 @@ SOFTWARE.
 
 ### Added
 
-- Initial project scaffolded with node-gen-kit
+- Initial project scaffolded with node-gen
 `,
   });
 

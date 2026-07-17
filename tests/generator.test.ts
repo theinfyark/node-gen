@@ -63,7 +63,7 @@ describe('createProject', () => {
     expect(pkg.dependencies.express).toBeTruthy();
     expect(pkg.dependencies.zod).toBeTruthy();
     expect(pkg.dependencies['swagger-ui-express']).toBeTruthy();
-    expect(pkg.dependencies['env-ok-kit']).toBeTruthy();
+    expect(pkg.dependencies['env-ok']).toBeTruthy();
     expect(pkg.devDependencies.vitest).toBeTruthy();
     expect(pkg.type).toBe('module');
 
@@ -139,12 +139,18 @@ describe('createProject', () => {
         },
       }),
     );
-    const pkg = JSON.parse(readFileSync(path.join(targetDir, 'package.json'), 'utf8'));
+    const pkg = JSON.parse(
+      readFileSync(path.join(targetDir, 'package.json'), 'utf8'),
+    );
     expect(pkg.dependencies.jose).toBeTruthy();
     expect(pkg.dependencies.joi).toBeTruthy();
     expect(pkg.dependencies.winston).toBeTruthy();
-    expect(existsSync(path.join(targetDir, 'src/middleware/auth.ts'))).toBe(true);
-    expect(existsSync(path.join(targetDir, 'src/modules/items/items.schema.ts'))).toBe(true);
+    expect(existsSync(path.join(targetDir, 'src/middleware/auth.ts'))).toBe(
+      true,
+    );
+    expect(
+      existsSync(path.join(targetDir, 'src/modules/items/items.schema.ts')),
+    ).toBe(true);
     const env = readFileSync(path.join(targetDir, '.env.example'), 'utf8');
     expect(env).toContain('AUTH_JWKS_URI');
     rmSync(root, { recursive: true, force: true });

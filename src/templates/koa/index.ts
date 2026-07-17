@@ -1,43 +1,46 @@
-import type { ProjectConfig, GeneratedFile, DepMap } from "../../core/types.js";
-import { ver } from "../../core/versions.js";
-import { ext } from "../../utils/helpers.js";
-import { inlineCreateSchema, parseBodySnippet } from "../features/validation.js";
+import type { ProjectConfig, GeneratedFile, DepMap } from '../../core/types.js';
+import { ver } from '../../core/versions.js';
+import { ext } from '../../utils/helpers.js';
+import {
+  inlineCreateSchema,
+  parseBodySnippet,
+} from '../features/validation.js';
 
 export function koaDeps(config: ProjectConfig): DepMap {
   const d: DepMap = {
-    koa: ver("koa"),
-    "@koa/router": ver("@koa/router"),
-    "koa-bodyparser": ver("koa-bodyparser"),
+    koa: ver('koa'),
+    '@koa/router': ver('@koa/router'),
+    'koa-bodyparser': ver('koa-bodyparser'),
   };
   if (config.features.security) {
-    d["@koa/cors"] = ver("@koa/cors");
-    d["koa-helmet"] = ver("koa-helmet");
-    d["koa-compress"] = ver("koa-compress");
+    d['@koa/cors'] = ver('@koa/cors');
+    d['koa-helmet'] = ver('koa-helmet');
+    d['koa-compress'] = ver('koa-compress');
   }
   return d;
 }
 
 export function koaDevDeps(config: ProjectConfig): DepMap {
-  if (config.language !== "ts") return {};
+  if (config.language !== 'ts') return {};
   const d: DepMap = {
-    "@types/koa": ver("@types/koa"),
-    "@types/koa__router": ver("@types/koa__router"),
-    "@types/koa-bodyparser": ver("@types/koa-bodyparser"),
+    '@types/koa': ver('@types/koa'),
+    '@types/koa__router': ver('@types/koa__router'),
+    '@types/koa-bodyparser': ver('@types/koa-bodyparser'),
   };
   if (config.features.security) {
-    d["@types/koa__cors"] = ver("@types/koa__cors");
-    d["@types/koa-compress"] = ver("@types/koa-compress");
+    d['@types/koa__cors'] = ver('@types/koa__cors');
+    d['@types/koa-compress'] = ver('@types/koa-compress');
   }
   return d;
 }
 
 export function koaFiles(config: ProjectConfig): GeneratedFile[] {
   const e = ext(config.language);
-  const ts = config.language === "ts";
-  const hasValidation = config.features.validation !== "none";
-  const authEnabled = config.features.auth !== "none";
+  const ts = config.language === 'ts';
+  const hasValidation = config.features.validation !== 'none';
+  const authEnabled = config.features.auth !== 'none';
   const auth = config.features.auth;
-  const docs = config.features.docs !== "none";
+  const docs = config.features.docs !== 'none';
   const sec = config.features.security;
 
   const files: GeneratedFile[] = [
@@ -114,7 +117,7 @@ itemsRouter.get('/:id', (ctx) => {
 });
 
 itemsRouter.post('/', (ctx) => {
-  const body = ${parseBodySnippet(config, "ctx.request.body")};
+  const body = ${parseBodySnippet(config, 'ctx.request.body')};
   const item = itemsStore.create(body);
   ctx.status = 201;
   ctx.body = { success: true, data: item };
@@ -137,11 +140,11 @@ itemsRouter.delete('/:id', (ctx) => {
       content: `import Koa from 'koa';
 import Router from '@koa/router';
 import bodyParser from 'koa-bodyparser';
-${sec ? "import cors from '@koa/cors';\nimport helmet from 'koa-helmet';\nimport compress from 'koa-compress';\n" : ""}import { appEnv } from '../config/env.js';
+${sec ? "import cors from '@koa/cors';\nimport helmet from 'koa-helmet';\nimport compress from 'koa-compress';\n" : ''}import { appEnv } from '../config/env.js';
 import { AppError } from '../lib/errors.js';
 import { logger } from '../lib/logger.js';
 import { itemsRouter } from '../modules/items/items.routes.js';
-${authEnabled ? "import { authRouter } from '../modules/auth/auth.routes.js';\n" : ""}${docs ? "import { mountDocs } from '../docs/openapi.js';\n" : ""}
+${authEnabled ? "import { authRouter } from '../modules/auth/auth.routes.js';\n" : ''}${docs ? "import { mountDocs } from '../docs/openapi.js';\n" : ''}
 export function createApp() {
   const app = new Koa();
   const api = new Router({ prefix: \`\${appEnv.API_PREFIX}/\${appEnv.API_VERSION}\` });
@@ -164,7 +167,7 @@ export function createApp() {
     }
   });
 
-${sec ? "  app.use(helmet());\n  app.use(cors());\n  app.use(compress());\n" : ""}  app.use(bodyParser({ jsonLimit: '1mb' }));
+${sec ? '  app.use(helmet());\n  app.use(cors());\n  app.use(compress());\n' : ''}  app.use(bodyParser({ jsonLimit: '1mb' }));
 
   const root = new Router();
   root.get('/health', (ctx) => {
@@ -174,9 +177,9 @@ ${sec ? "  app.use(helmet());\n  app.use(cors());\n  app.use(compress());\n" : "
       timestamp: new Date().toISOString(),
     };
   });
-${docs ? "  mountDocs(root);\n" : ""}
+${docs ? '  mountDocs(root);\n' : ''}
   api.use(itemsRouter.routes(), itemsRouter.allowedMethods());
-${authEnabled ? "  api.use(authRouter.routes(), authRouter.allowedMethods());\n" : ""}
+${authEnabled ? '  api.use(authRouter.routes(), authRouter.allowedMethods());\n' : ''}
   app.use(root.routes()).use(root.allowedMethods());
   app.use(api.routes()).use(api.allowedMethods());
 
@@ -198,7 +201,7 @@ app.listen(appEnv.PORT, appEnv.HOST, () => {
     },
   ];
 
-  if (auth === "jwt" || auth === "passport") {
+  if (auth === 'jwt' || auth === 'passport') {
     files.push({
       path: `src/modules/auth/auth.routes.${e}`,
       content: `import Router from '@koa/router';
@@ -207,14 +210,14 @@ import { authService } from './auth.service.js';
 export const authRouter = new Router({ prefix: '/auth' });
 
 authRouter.post('/register', async (ctx) => {
-  const body = ctx.request.body${ts ? " as { email: string; password: string }" : ""};
+  const body = ctx.request.body${ts ? ' as { email: string; password: string }' : ''};
   const result = await authService.register(body.email, body.password);
   ctx.status = 201;
   ctx.body = { success: true, data: result };
 });
 
 authRouter.post('/login', async (ctx) => {
-  const body = ctx.request.body${ts ? " as { email: string; password: string }" : ""};
+  const body = ctx.request.body${ts ? ' as { email: string; password: string }' : ''};
   const result = await authService.login(body.email, body.password);
   ctx.body = { success: true, data: result };
 });

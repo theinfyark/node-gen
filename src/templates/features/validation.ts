@@ -1,21 +1,21 @@
-import type { ProjectConfig, GeneratedFile, DepMap } from "../../core/types.js";
-import { ver } from "../../core/versions.js";
-import { ext } from "../../utils/helpers.js";
+import type { ProjectConfig, GeneratedFile, DepMap } from '../../core/types.js';
+import { ver } from '../../core/versions.js';
+import { ext } from '../../utils/helpers.js';
 
 export function validationDeps(config: ProjectConfig): DepMap {
-  if (config.features.validation === "zod") return { zod: ver("zod") };
-  if (config.features.validation === "joi") return { joi: ver("joi") };
+  if (config.features.validation === 'zod') return { zod: ver('zod') };
+  if (config.features.validation === 'joi') return { joi: ver('joi') };
   return {};
 }
 
 /** Shared validate middleware + item schemas for Express (zod or joi). */
 export function expressValidationFiles(config: ProjectConfig): GeneratedFile[] {
-  if (config.features.validation === "none") return [];
+  if (config.features.validation === 'none') return [];
   const e = ext(config.language);
-  const ts = config.language === "ts";
+  const ts = config.language === 'ts';
   const files: GeneratedFile[] = [];
 
-  if (config.features.validation === "zod") {
+  if (config.features.validation === 'zod') {
     files.push({
       path: `src/modules/items/items.schema.${e}`,
       content: `import { z } from 'zod';
@@ -119,13 +119,13 @@ export function validateBody(schema) {
 
 /** Inline schema snippet for non-Express frameworks. */
 export function inlineCreateSchema(config: ProjectConfig): string {
-  if (config.features.validation === "zod") {
+  if (config.features.validation === 'zod') {
     return `import { z } from 'zod';
 
 const createSchema = z.object({ name: z.string().min(1), description: z.string().optional() });
 `;
   }
-  if (config.features.validation === "joi") {
+  if (config.features.validation === 'joi') {
     return `import Joi from 'joi';
 
 const createSchema = Joi.object({
@@ -134,14 +134,17 @@ const createSchema = Joi.object({
 });
 `;
   }
-  return "";
+  return '';
 }
 
-export function parseBodySnippet(config: ProjectConfig, bodyExpr: string): string {
-  if (config.features.validation === "zod") {
+export function parseBodySnippet(
+  config: ProjectConfig,
+  bodyExpr: string,
+): string {
+  if (config.features.validation === 'zod') {
     return `createSchema.parse(${bodyExpr})`;
   }
-  if (config.features.validation === "joi") {
+  if (config.features.validation === 'joi') {
     return `(() => { const { error, value } = createSchema.validate(${bodyExpr}, { abortEarly: false, stripUnknown: true }); if (error) throw error; return value; })()`;
   }
   return bodyExpr;

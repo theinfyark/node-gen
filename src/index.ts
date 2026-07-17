@@ -1,6 +1,6 @@
-export { createProject, defaultConfig } from "./core/generator.js";
-export { registerPlugin, getPlugins, clearPlugins } from "./core/registry.js";
-export { registerBuiltinPlugins } from "./plugins/index.js";
+export { createProject, defaultConfig } from './core/generator.js';
+export { registerPlugin, getPlugins, clearPlugins } from './core/registry.js';
+export { registerBuiltinPlugins } from './plugins/index.js';
 export type {
   ProjectConfig,
   GenerateResult,
@@ -20,4 +20,4 @@ export type {
   DocsChoice,
   TestRunner,
   ValidationChoice,
-} from "./core/types.js";
+} from './core/types.js';

@@ -1,25 +1,28 @@
-import type { ProjectConfig, GeneratedFile, DepMap } from "../../core/types.js";
-import { ver } from "../../core/versions.js";
-import { ext } from "../../utils/helpers.js";
-import { inlineCreateSchema, parseBodySnippet } from "../features/validation.js";
+import type { ProjectConfig, GeneratedFile, DepMap } from '../../core/types.js';
+import { ver } from '../../core/versions.js';
+import { ext } from '../../utils/helpers.js';
+import {
+  inlineCreateSchema,
+  parseBodySnippet,
+} from '../features/validation.js';
 
 export function fastifyDeps(config: ProjectConfig): DepMap {
-  const d: DepMap = { fastify: ver("fastify") };
+  const d: DepMap = { fastify: ver('fastify') };
   if (config.features.security) {
-    d["@fastify/helmet"] = ver("@fastify/helmet");
-    d["@fastify/cors"] = ver("@fastify/cors");
-    d["@fastify/compress"] = ver("@fastify/compress");
-    d["@fastify/rate-limit"] = ver("@fastify/rate-limit");
+    d['@fastify/helmet'] = ver('@fastify/helmet');
+    d['@fastify/cors'] = ver('@fastify/cors');
+    d['@fastify/compress'] = ver('@fastify/compress');
+    d['@fastify/rate-limit'] = ver('@fastify/rate-limit');
   }
   return d;
 }
 
 export function fastifyFiles(config: ProjectConfig): GeneratedFile[] {
   const e = ext(config.language);
-  const ts = config.language === "ts";
-  const hasValidation = config.features.validation !== "none";
-  const auth = config.features.auth !== "none";
-  const docs = config.features.docs !== "none";
+  const ts = config.language === 'ts';
+  const hasValidation = config.features.validation !== 'none';
+  const auth = config.features.auth !== 'none';
+  const docs = config.features.docs !== 'none';
   const sec = config.features.security;
 
   const files: GeneratedFile[] = [
@@ -79,32 +82,32 @@ export const itemsStore = {
     },
     {
       path: `src/modules/items/items.routes.${e}`,
-      content: `${ts ? "import type { FastifyInstance } from 'fastify';\n" : ""}import { itemsStore } from './items.store.js';
+      content: `${ts ? "import type { FastifyInstance } from 'fastify';\n" : ''}import { itemsStore } from './items.store.js';
 import { NotFoundError } from '../../lib/errors.js';
 ${inlineCreateSchema(config)}
-export async function itemsRoutes(app${ts ? ": FastifyInstance" : ""}) {
+export async function itemsRoutes(app${ts ? ': FastifyInstance' : ''}) {
   app.get('/items', async () => ({ success: true, data: itemsStore.list() }));
 
   app.get('/items/:id', async (req) => {
-    const item = itemsStore.get(${ts ? "(req.params as { id: string }).id" : "req.params.id"});
+    const item = itemsStore.get(${ts ? '(req.params as { id: string }).id' : 'req.params.id'});
     if (!item) throw new NotFoundError('Item not found');
     return { success: true, data: item };
   });
 
   app.post('/items', async (req, reply) => {
-    const body = ${parseBodySnippet(config, "req.body")};
+    const body = ${parseBodySnippet(config, 'req.body')};
     const item = itemsStore.create(body);
     return reply.code(201).send({ success: true, data: item });
   });
 
   app.patch('/items/:id', async (req) => {
-    const item = itemsStore.update(${ts ? "(req.params as { id: string }).id" : "req.params.id"}, req.body);
+    const item = itemsStore.update(${ts ? '(req.params as { id: string }).id' : 'req.params.id'}, req.body);
     if (!item) throw new NotFoundError('Item not found');
     return { success: true, data: item };
   });
 
   app.delete('/items/:id', async (req, reply) => {
-    if (!itemsStore.remove(${ts ? "(req.params as { id: string }).id" : "req.params.id"})) {
+    if (!itemsStore.remove(${ts ? '(req.params as { id: string }).id' : 'req.params.id'})) {
       throw new NotFoundError('Item not found');
     }
     return reply.code(204).send();
@@ -118,21 +121,29 @@ export async function itemsRoutes(app${ts ? ": FastifyInstance" : ""}) {
 import { logger } from '../lib/logger.js';
 import { AppError } from '../lib/errors.js';
 import { itemsRoutes } from '../modules/items/items.routes.js';
-${auth ? "import { authRoutes } from '../modules/auth/auth.routes.js';\n" : ""}${docs ? "import { registerDocs } from '../docs/openapi.js';\n" : ""}${sec ? `import helmet from '@fastify/helmet';
+${auth ? "import { authRoutes } from '../modules/auth/auth.routes.js';\n" : ''}${docs ? "import { registerDocs } from '../docs/openapi.js';\n" : ''}${
+        sec
+          ? `import helmet from '@fastify/helmet';
 import cors from '@fastify/cors';
 import compress from '@fastify/compress';
 import rateLimit from '@fastify/rate-limit';
-` : ""}
+`
+          : ''
+      }
 export async function createApp() {
   const app = Fastify({ logger: false });
 
-${sec ? `  await app.register(helmet);
+${
+  sec
+    ? `  await app.register(helmet);
   await app.register(cors);
   await app.register(compress);
   await app.register(rateLimit, { max: 200, timeWindow: '15 minutes' });
-` : ""}
+`
+    : ''
+}
   app.addHook('onRequest', async (req, reply) => {
-    const id = (req.headers['x-request-id']${ts ? " as string" : ""}) || crypto.randomUUID();
+    const id = (req.headers['x-request-id']${ts ? ' as string' : ''}) || crypto.randomUUID();
     reply.header('x-request-id', id);
   });
 
@@ -142,9 +153,9 @@ ${sec ? `  await app.register(helmet);
     timestamp: new Date().toISOString(),
   }));
 
-${docs ? "  await registerDocs(app);\n" : ""}
+${docs ? '  await registerDocs(app);\n' : ''}
   await app.register(itemsRoutes, { prefix: \`\${appEnv.API_PREFIX}/\${appEnv.API_VERSION}\` });
-${auth ? "  await app.register(authRoutes, { prefix: `${appEnv.API_PREFIX}/${appEnv.API_VERSION}/auth` });\n" : ""}
+${auth ? '  await app.register(authRoutes, { prefix: `${appEnv.API_PREFIX}/${appEnv.API_VERSION}/auth` });\n' : ''}
   app.setErrorHandler((err, _req, reply) => {
     if (err instanceof AppError) {
       return reply.code(err.statusCode).send({

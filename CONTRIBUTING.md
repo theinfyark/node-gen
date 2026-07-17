@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for contributing to **node-gen-kit**.
+Thanks for contributing to **node-gen**.
 
 ## Setup
 

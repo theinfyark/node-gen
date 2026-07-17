@@ -1,5 +1,12 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+
+- Renamed npm package from `node-gen-kit` to `node-gen` to match the GitHub repository and project folder names.
+
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
@@ -39,7 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Published as `node-gen-kit` (CLI bin remains `node-gen`; npm rejected bare `node-gen` as too similar to `nodegen`)
+- Published as `node-gen` (CLI bin remains `node-gen`; npm rejected bare `node-gen` as too similar to `nodegen`)
 - Interactive CLI to scaffold enterprise Node.js backends
 - Frameworks: Express, Fastify, Hono
 - TypeScript and JavaScript, ESM and CJS

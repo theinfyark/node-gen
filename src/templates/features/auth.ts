@@ -1,50 +1,50 @@
-import type { ProjectConfig, GeneratedFile, DepMap } from "../../core/types.js";
-import { ver } from "../../core/versions.js";
-import { ext } from "../../utils/helpers.js";
+import type { ProjectConfig, GeneratedFile, DepMap } from '../../core/types.js';
+import { ver } from '../../core/versions.js';
+import { ext } from '../../utils/helpers.js';
 
-const OIDC_PROVIDERS = new Set(["auth0", "okta", "keycloak"]);
+const OIDC_PROVIDERS = new Set(['auth0', 'okta', 'keycloak']);
 
 export function authDeps(config: ProjectConfig): DepMap {
-  if (config.features.auth === "none") return {};
+  if (config.features.auth === 'none') return {};
   if (OIDC_PROVIDERS.has(config.features.auth)) {
-    return { jose: ver("jose") };
+    return { jose: ver('jose') };
   }
   const d: DepMap = {
-    jsonwebtoken: ver("jsonwebtoken"),
-    bcryptjs: ver("bcryptjs"),
+    jsonwebtoken: ver('jsonwebtoken'),
+    bcryptjs: ver('bcryptjs'),
   };
-  if (config.features.auth === "passport") {
-    d.passport = ver("passport");
-    d["passport-jwt"] = ver("passport-jwt");
-    d["passport-local"] = ver("passport-local");
+  if (config.features.auth === 'passport') {
+    d.passport = ver('passport');
+    d['passport-jwt'] = ver('passport-jwt');
+    d['passport-local'] = ver('passport-local');
   }
   return d;
 }
 
 export function authDevDeps(config: ProjectConfig): DepMap {
-  if (config.features.auth === "none" || config.language !== "ts") return {};
+  if (config.features.auth === 'none' || config.language !== 'ts') return {};
   if (OIDC_PROVIDERS.has(config.features.auth)) return {};
   const d: DepMap = {
-    "@types/jsonwebtoken": ver("@types/jsonwebtoken"),
-    "@types/bcryptjs": ver("@types/bcryptjs"),
+    '@types/jsonwebtoken': ver('@types/jsonwebtoken'),
+    '@types/bcryptjs': ver('@types/bcryptjs'),
   };
-  if (config.features.auth === "passport") {
-    d["@types/passport"] = ver("@types/passport");
-    d["@types/passport-jwt"] = ver("@types/passport-jwt");
-    d["@types/passport-local"] = ver("@types/passport-local");
+  if (config.features.auth === 'passport') {
+    d['@types/passport'] = ver('@types/passport');
+    d['@types/passport-jwt'] = ver('@types/passport-jwt');
+    d['@types/passport-local'] = ver('@types/passport-local');
   }
   return d;
 }
 
 function oidcEnvBlock(auth: string): string {
-  if (auth === "auth0") {
+  if (auth === 'auth0') {
     return `AUTH0_DOMAIN=your-tenant.auth0.com
 AUTH0_AUDIENCE=https://api.example.com
 AUTH_JWKS_URI=https://your-tenant.auth0.com/.well-known/jwks.json
 AUTH_ISSUER=https://your-tenant.auth0.com/
 `;
   }
-  if (auth === "okta") {
+  if (auth === 'okta') {
     return `OKTA_DOMAIN=https://your-org.okta.com
 OKTA_AUDIENCE=api://default
 AUTH_JWKS_URI=https://your-org.okta.com/oauth2/default/v1/keys
@@ -61,12 +61,12 @@ AUTH_ISSUER=https://keycloak.example.com/realms/myrealm
 
 export function oidcEnvLines(config: ProjectConfig): string[] {
   if (!OIDC_PROVIDERS.has(config.features.auth)) return [];
-  return oidcEnvBlock(config.features.auth).trim().split("\n");
+  return oidcEnvBlock(config.features.auth).trim().split('\n');
 }
 
 function oidcMiddlewareSource(config: ProjectConfig): string {
   const e = ext(config.language);
-  const ts = config.language === "ts";
+  const ts = config.language === 'ts';
   const provider = config.features.auth;
 
   const common = `import { createRemoteJWKSet, jwtVerify } from 'jose';
@@ -75,7 +75,7 @@ import { UnauthorizedError } from '../lib/errors.js';
 
 const jwks = createRemoteJWKSet(new URL(appEnv.AUTH_JWKS_URI));
 
-export async function verifyAccessToken(token${ts ? ": string" : ""}) {
+export async function verifyAccessToken(token${ts ? ': string' : ''}) {
   const { payload } = await jwtVerify(token, jwks, {
     issuer: appEnv.AUTH_ISSUER,
     audience: appEnv.AUTH_AUDIENCE,
@@ -84,10 +84,10 @@ export async function verifyAccessToken(token${ts ? ": string" : ""}) {
 }
 `;
 
-  if (config.framework === "express") {
+  if (config.framework === 'express') {
     return `${common}
-${ts ? "import type { Request, Response, NextFunction } from 'express';\n" : ""}
-export function requireAuth(req${ts ? ": Request" : ""}, _res${ts ? ": Response" : ""}, next${ts ? ": NextFunction" : ""}) {
+${ts ? "import type { Request, Response, NextFunction } from 'express';\n" : ''}
+export function requireAuth(req${ts ? ': Request' : ''}, _res${ts ? ': Response' : ''}, next${ts ? ': NextFunction' : ''}) {
   const header = req.headers.authorization;
   if (!header?.startsWith('Bearer ')) {
     next(new UnauthorizedError());
@@ -95,7 +95,7 @@ export function requireAuth(req${ts ? ": Request" : ""}, _res${ts ? ": Response"
   }
   verifyAccessToken(header.slice(7))
     .then((payload) => {
-      (req${ts ? " as Request & { user?: unknown }" : ""}).user = payload;
+      (req${ts ? ' as Request & { user?: unknown }' : ''}).user = payload;
       next();
     })
     .catch(() => next(new UnauthorizedError('Invalid token')));
@@ -103,9 +103,9 @@ export function requireAuth(req${ts ? ": Request" : ""}, _res${ts ? ": Response"
 `;
   }
 
-  if (config.framework === "fastify") {
+  if (config.framework === 'fastify') {
     return `${common}
-export async function requireAuth(req${ts ? ": { headers: { authorization?: string }; user?: unknown }" : ""}) {
+export async function requireAuth(req${ts ? ': { headers: { authorization?: string }; user?: unknown }' : ''}) {
   const header = req.headers.authorization;
   if (!header?.startsWith('Bearer ')) throw new UnauthorizedError();
   req.user = await verifyAccessToken(header.slice(7));
@@ -113,9 +113,9 @@ export async function requireAuth(req${ts ? ": { headers: { authorization?: stri
 `;
   }
 
-  if (config.framework === "koa") {
+  if (config.framework === 'koa') {
     return `${common}
-export async function requireAuth(ctx${ts ? ": { get: (h: string) => string; state: Record<string, unknown> }" : ""}, next${ts ? ": () => Promise<void>" : ""}) {
+export async function requireAuth(ctx${ts ? ': { get: (h: string) => string; state: Record<string, unknown> }' : ''}, next${ts ? ': () => Promise<void>' : ''}) {
   const header = ctx.get('authorization');
   if (!header?.startsWith('Bearer ')) throw new UnauthorizedError();
   ctx.state.user = await verifyAccessToken(header.slice(7));
@@ -126,7 +126,7 @@ export async function requireAuth(ctx${ts ? ": { get: (h: string) => string; sta
 
   // hono
   return `${common}
-export async function requireAuth(c${ts ? ": { req: { header: (n: string) => string | undefined }; set: (k: string, v: unknown) => void }" : ""}, next${ts ? ": () => Promise<void>" : ""}) {
+export async function requireAuth(c${ts ? ': { req: { header: (n: string) => string | undefined }; set: (k: string, v: unknown) => void }' : ''}, next${ts ? ': () => Promise<void>' : ''}) {
   const header = c.req.header('authorization');
   if (!header?.startsWith('Bearer ')) throw new UnauthorizedError();
   c.set('user', await verifyAccessToken(header.slice(7)));
@@ -138,9 +138,9 @@ export async function requireAuth(c${ts ? ": { req: { header: (n: string) => str
 function oidcAuthRouteSource(config: ProjectConfig): string {
   const provider = config.features.auth;
   const label =
-    provider === "auth0" ? "Auth0" : provider === "okta" ? "Okta" : "Keycloak";
+    provider === 'auth0' ? 'Auth0' : provider === 'okta' ? 'Okta' : 'Keycloak';
 
-  if (config.framework === "express") {
+  if (config.framework === 'express') {
     return `import { Router } from 'express';
 import { requireAuth } from '../../middleware/auth.js';
 
@@ -153,7 +153,7 @@ authRouter.get('/me', requireAuth, (req, res) => {
 `;
   }
 
-  if (config.framework === "fastify") {
+  if (config.framework === 'fastify') {
     return `import { requireAuth } from '../../middleware/auth.js';
 
 export async function authRoutes(app) {
@@ -165,7 +165,7 @@ export async function authRoutes(app) {
 `;
   }
 
-  if (config.framework === "koa") {
+  if (config.framework === 'koa') {
     return `import Router from '@koa/router';
 import { requireAuth } from '../../middleware/auth.js';
 
@@ -189,9 +189,9 @@ authRoutes.get('/me', requireAuth, (c) =>
 }
 
 export function authFiles(config: ProjectConfig): GeneratedFile[] {
-  if (config.features.auth === "none") return [];
+  if (config.features.auth === 'none') return [];
   const e = ext(config.language);
-  const ts = config.language === "ts";
+  const ts = config.language === 'ts';
   const validation = config.features.validation;
 
   if (OIDC_PROVIDERS.has(config.features.auth)) {
@@ -201,17 +201,17 @@ export function authFiles(config: ProjectConfig): GeneratedFile[] {
         content: oidcMiddlewareSource(config),
       },
     ];
-    if (config.framework === "express") {
+    if (config.framework === 'express') {
       files.push({
         path: `src/modules/auth/auth.route.${e}`,
         content: oidcAuthRouteSource(config),
       });
-    } else if (config.framework === "koa") {
+    } else if (config.framework === 'koa') {
       files.push({
         path: `src/modules/auth/auth.routes.${e}`,
         content: oidcAuthRouteSource(config),
       });
-    } else if (config.framework === "fastify" || config.framework === "hono") {
+    } else if (config.framework === 'fastify' || config.framework === 'hono') {
       files.push({
         path: `src/modules/auth/auth.routes.${e}`,
         content: oidcAuthRouteSource(config),
@@ -232,14 +232,14 @@ import { UnauthorizedError } from '../../lib/errors.js';
 const users = new Map();
 
 export const authService = {
-  async register(email${ts ? ": string" : ""}, password${ts ? ": string" : ""}) {
+  async register(email${ts ? ': string' : ''}, password${ts ? ': string' : ''}) {
     if (users.has(email)) throw new UnauthorizedError('User already exists');
     const hash = await bcrypt.hash(password, 10);
     const user = { id: crypto.randomUUID(), email, passwordHash: hash };
     users.set(email, user);
     return { id: user.id, email: user.email, token: signToken(user) };
   },
-  async login(email${ts ? ": string" : ""}, password${ts ? ": string" : ""}) {
+  async login(email${ts ? ': string' : ''}, password${ts ? ': string' : ''}) {
     const user = users.get(email);
     if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
       throw new UnauthorizedError('Invalid credentials');
@@ -248,7 +248,7 @@ export const authService = {
   },
 };
 
-function signToken(user${ts ? ": { id: string; email: string }" : ""}) {
+function signToken(user${ts ? ': { id: string; email: string }' : ''}) {
   return jwt.sign(
     { sub: user.id, email: user.email },
     appEnv.JWT_SECRET,
@@ -276,10 +276,10 @@ const credsSchema = Joi.object({
 });
 `;
   const valImport =
-    validation === "zod" ? zodCreds : validation === "joi" ? joiCreds : "";
-  const valMw = validation !== "none" ? ", validateBody(credsSchema)" : "";
+    validation === 'zod' ? zodCreds : validation === 'joi' ? joiCreds : '';
+  const valMw = validation !== 'none' ? ', validateBody(credsSchema)' : '';
 
-  if (config.framework === "express") {
+  if (config.framework === 'express') {
     files.push({
       path: `src/modules/auth/auth.route.${e}`,
       content: `import { Router } from 'express';
@@ -348,26 +348,26 @@ export function requireAuth(req, _res, next) {
 }
 `,
     });
-  } else if (config.framework === "fastify") {
+  } else if (config.framework === 'fastify') {
     files.push({
       path: `src/modules/auth/auth.routes.${e}`,
-      content: `${ts ? "import type { FastifyInstance } from 'fastify';\n" : ""}import { authService } from './auth.service.js';
+      content: `${ts ? "import type { FastifyInstance } from 'fastify';\n" : ''}import { authService } from './auth.service.js';
 
-export async function authRoutes(app${ts ? ": FastifyInstance" : ""}) {
+export async function authRoutes(app${ts ? ': FastifyInstance' : ''}) {
   app.post('/register', async (req, reply) => {
-    const body = req.body${ts ? " as { email: string; password: string }" : ""};
+    const body = req.body${ts ? ' as { email: string; password: string }' : ''};
     const result = await authService.register(body.email, body.password);
     return reply.code(201).send({ success: true, data: result });
   });
   app.post('/login', async (req) => {
-    const body = req.body${ts ? " as { email: string; password: string }" : ""};
+    const body = req.body${ts ? ' as { email: string; password: string }' : ''};
     const result = await authService.login(body.email, body.password);
     return { success: true, data: result };
   });
 }
 `,
     });
-  } else if (config.framework === "hono") {
+  } else if (config.framework === 'hono') {
     files.push({
       path: `src/modules/auth/auth.routes.${e}`,
       content: `import { Hono } from 'hono';
