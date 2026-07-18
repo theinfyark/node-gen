@@ -1,6 +1,16 @@
 # Changelog
 
 
+
+## [1.1.5] - 2026-07-18
+
+### Fixed
+
+- JavaScript scaffolds no longer emit TypeScript \`import type\` in OpenAPI/Swagger docs
+- Always set \`"type": "module"\` for generated JavaScript projects
+
+
+
 ## [1.1.4] - 2026-07-18
 
 ### Fixed

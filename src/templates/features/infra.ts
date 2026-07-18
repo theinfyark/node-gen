@@ -74,8 +74,7 @@ export function docsFiles(config: ProjectConfig): GeneratedFile[] {
       return [
         {
           path: `src/docs/openapi.${e}`,
-          content: `import type { Express } from 'express';
-import { apiReference } from '@scalar/express-api-reference';
+          content: `${ts ? "import type { Express } from 'express';\n" : ''}import { apiReference } from '@scalar/express-api-reference';
 
 const openApiDoc = ${doc};
 
@@ -91,8 +90,7 @@ export function mountDocs(app${ts ? ': Express' : ''}) {
     return [
       {
         path: `src/docs/openapi.${e}`,
-        content: `import type { Express } from 'express';
-import swaggerUi from 'swagger-ui-express';
+        content: `${ts ? "import type { Express } from 'express';\n" : ''}import swaggerUi from 'swagger-ui-express';
 
 const openApiDoc = ${doc};
 

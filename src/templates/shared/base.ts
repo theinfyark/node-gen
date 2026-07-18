@@ -19,12 +19,14 @@ export function basePackageJson(
     devDependencies: sortMap(devDeps),
   };
   const type = packageJsonType(config.moduleSystem);
+  // Generated sources currently use ESM import/export for JS as well.
+  // Always set "type": "module" for JS so Node does not emit MODULE_TYPELESS warnings.
   if (type) pkg.type = type;
+  else if (config.language === 'js') pkg.type = 'module';
   if (config.language === 'ts') {
     pkg.main = './dist/index.js';
   } else {
-    pkg.main =
-      config.moduleSystem === 'esm' ? './src/index.js' : './src/index.js';
+    pkg.main = './src/index.js';
   }
   return {
     path: 'package.json',

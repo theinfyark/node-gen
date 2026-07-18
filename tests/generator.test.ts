@@ -190,4 +190,49 @@ describe('createProject', () => {
     }
     rmSync(root, { recursive: true, force: true });
   });
+
+  it('scaffolds valid JavaScript (no import type) with swagger docs', async () => {
+    const root = mkdtempSync(path.join(tmpdir(), 'node-gen-'));
+    const targetDir = path.join(root, 'js-api');
+    await createProject(
+      defaultConfig({
+        projectName: 'js-api',
+        targetDir,
+        language: 'js',
+        moduleSystem: 'cjs',
+        skipInstall: true,
+        skipGit: true,
+        features: {
+          auth: 'none',
+          validation: 'none',
+          database: 'none',
+          orm: 'none',
+          cache: 'none',
+          logger: 'winston',
+          docs: 'swagger',
+          docker: false,
+          ci: false,
+          security: true,
+          testing: 'none',
+          monitoring: false,
+          gitInit: false,
+          githubRepo: false,
+        },
+      }),
+    );
+
+    const openapi = readFileSync(
+      path.join(targetDir, 'src/docs/openapi.js'),
+      'utf8',
+    );
+    expect(openapi).not.toMatch(/import type/);
+    expect(openapi).toContain("from 'swagger-ui-express'");
+
+    const pkg = JSON.parse(
+      readFileSync(path.join(targetDir, 'package.json'), 'utf8'),
+    );
+    expect(pkg.type).toBe('module');
+
+    rmSync(root, { recursive: true, force: true });
+  });
 });
