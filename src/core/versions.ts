@@ -94,6 +94,7 @@ export const VERSIONS = {
   // lint / format
   eslint: '^9.28.0',
   prettier: '^3.5.3',
+  nodemon: '^3.1.10',
 } as const;
 
 export type VersionKey = keyof typeof VERSIONS;

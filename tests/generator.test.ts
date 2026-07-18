@@ -68,9 +68,22 @@ describe('createProject', () => {
     expect(pkg.devDependencies.vitest).toBeTruthy();
     expect(pkg.devDependencies.eslint).toBeTruthy();
     expect(pkg.devDependencies.prettier).toBeTruthy();
+    expect(pkg.devDependencies.nodemon).toBeTruthy();
     expect(pkg.devDependencies['pino-pretty']).toBeTruthy();
     expect(pkg.dependencies['pino-pretty']).toBeUndefined();
+    expect(pkg.scripts.dev).toContain('nodemon');
     expect(pkg.type).toBe('module');
+    expect(existsSync(path.join(targetDir, 'nodemon.json'))).toBe(true);
+    expect(existsSync(path.join(targetDir, '.env'))).toBe(true);
+    expect(existsSync(path.join(targetDir, '.env.example'))).toBe(true);
+    const envExample = readFileSync(path.join(targetDir, '.env.example'), 'utf8');
+    expect(envExample).toContain('APP_NAME=');
+    expect(envExample).toContain('CORS_ORIGIN=');
+    const envTs = readFileSync(path.join(targetDir, 'src/config/env.ts'), 'utf8');
+    expect(envTs).toContain('APP_NAME');
+    expect(envTs).toContain('RATE_LIMIT_MAX');
+    expect(envTs).toContain("loadEnv()");
+
 
     rmSync(root, { recursive: true, force: true });
   });
@@ -237,6 +250,10 @@ describe('createProject', () => {
       readFileSync(path.join(targetDir, 'package.json'), 'utf8'),
     );
     expect(pkg.type).toBe('module');
+    expect(pkg.devDependencies.nodemon).toBeTruthy();
+    expect(pkg.scripts.dev).toContain('nodemon');
+    expect(existsSync(path.join(targetDir, 'nodemon.json'))).toBe(true);
+    expect(existsSync(path.join(targetDir, '.env'))).toBe(true);
 
     rmSync(root, { recursive: true, force: true });
   });

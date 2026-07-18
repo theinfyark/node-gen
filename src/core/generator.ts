@@ -27,6 +27,7 @@ import {
   defaultScripts,
   baseDeps,
   baseDevDeps,
+  nodemonFile,
 } from '../templates/shared/base.js';
 import {
   expressDeps,
@@ -92,6 +93,7 @@ function collectCoreFiles(config: ProjectConfig): {
   const scripts = { ...defaultScripts(config), ...testingScripts(config) };
 
   files.push(gitignoreFile(), editorconfigFile(), readmeFile(config));
+  files.push(nodemonFile(config));
   files.push(...envFiles(config));
   const tsconfig = tsconfigFile(config);
   if (tsconfig) files.push(tsconfig);

@@ -3,6 +3,23 @@
 
 
 
+
+## [1.1.7] - 2026-07-18
+
+### Added
+
+- Full multi-environment env files (`.env`, `.env.local`, `.env.dev`, `.env.stg`, `.env.prod`, `.env.test`) with APP_NAME/APP_URL/security vars
+- `nodemon` + `nodemon.json` for `npm run dev` (JS and TypeScript)
+
+### Fixed
+
+- DATABASE_URL defaults now match the selected database
+- Express security middleware reads CORS/rate-limit/body limit from env
+
+
+
+
+
 ## [1.1.6] - 2026-07-18
 
 ### Fixed

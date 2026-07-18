@@ -49,6 +49,7 @@ coverage/
 .env
 .env.local
 .env.*.local
+!.env.example
 *.log
 .DS_Store
 uploads/
@@ -73,18 +74,71 @@ trim_trailing_whitespace = true
   };
 }
 
-export function envFiles(config: ProjectConfig): GeneratedFile[] {
+function defaultDatabaseUrl(config: ProjectConfig): string {
+  switch (config.features.database) {
+    case 'postgresql':
+      return 'postgresql://postgres:postgres@localhost:5432/app';
+    case 'mysql':
+      return 'mysql://root:root@localhost:3306/app';
+    case 'mongodb':
+      return 'mongodb://localhost:27017/app';
+    case 'sqlite':
+      return 'file:./dev.db';
+    default:
+      return config.features.orm !== 'none'
+        ? 'postgresql://postgres:postgres@localhost:5432/app'
+        : '';
+  }
+}
+
+function buildEnvLines(
+  config: ProjectConfig,
+  kind: 'example' | 'local' | 'dev' | 'stg' | 'prod' | 'test',
+): string[] {
+  const nodeEnv =
+    kind === 'prod'
+      ? 'production'
+      : kind === 'stg'
+        ? 'staging'
+        : kind === 'test'
+          ? 'test'
+          : 'development';
+  const logLevel =
+    kind === 'prod' ? 'warn' : kind === 'test' ? 'error' : kind === 'stg' ? 'info' : 'debug';
+  const appUrl =
+    kind === 'prod'
+      ? 'https://api.example.com'
+      : kind === 'stg'
+        ? 'https://api.staging.example.com'
+        : `http://localhost:${config.port}`;
+
   const lines = [
+    `APP_NAME=${config.projectName}`,
+    `APP_URL=${appUrl}`,
     `PORT=${config.port}`,
     'HOST=0.0.0.0',
-    'NODE_ENV=development',
+    `NODE_ENV=${nodeEnv}`,
     'API_PREFIX=/api',
     'API_VERSION=v1',
-    'LOG_LEVEL=info',
+    `LOG_LEVEL=${logLevel}`,
   ];
+
+  if (config.features.security) {
+    lines.push(
+      `CORS_ORIGIN=${kind === 'prod' || kind === 'stg' ? appUrl : '*'}`,
+    );
+    lines.push('RATE_LIMIT_WINDOW_MS=900000');
+    lines.push('RATE_LIMIT_MAX=200');
+    lines.push('BODY_LIMIT=1mb');
+  }
+
   const auth = config.features.auth;
   if (auth === 'jwt' || auth === 'passport') {
-    lines.push('JWT_SECRET=change-me-to-a-long-random-secret');
+    lines.push(
+      kind === 'prod' || kind === 'stg'
+        ? 'JWT_SECRET=replace-with-long-random-production-secret'
+        : 'JWT_SECRET=change-me-to-a-long-random-secret',
+    );
     lines.push('JWT_EXPIRES_IN=7d');
   } else if (auth === 'auth0') {
     lines.push('AUTH0_DOMAIN=your-tenant.auth0.com');
@@ -113,46 +167,55 @@ export function envFiles(config: ProjectConfig): GeneratedFile[] {
     lines.push('AUTH_ISSUER=https://keycloak.example.com/realms/myrealm');
     lines.push('AUTH_AUDIENCE=my-api');
   }
-  if (config.features.database === 'postgresql') {
-    lines.push(
-      'DATABASE_URL=postgresql://postgres:postgres@localhost:5432/app',
-    );
-  } else if (config.features.database === 'mysql') {
-    lines.push('DATABASE_URL=mysql://root:root@localhost:3306/app');
-  } else if (config.features.database === 'mongodb') {
-    lines.push('DATABASE_URL=mongodb://localhost:27017/app');
-  } else if (config.features.database === 'sqlite') {
-    lines.push('DATABASE_URL=file:./dev.db');
-  }
-  if (config.features.cache === 'redis') {
-    lines.push('REDIS_URL=redis://localhost:6379');
-  }
-  lines.push('STORAGE_PATH=./uploads');
 
-  const body = `${lines.join('\n')}\n`;
-  const names = [
-    '.env.example',
-    '.env.local',
-    '.env.dev',
-    '.env.stg',
-    '.env.prod',
-    '.env.test',
-  ];
-  return names.map((name) => ({
-    path: name,
-    content:
-      name === '.env.example'
-        ? body
-        : body.replace('NODE_ENV=development', `NODE_ENV=${envName(name)}`),
-  }));
+  const dbUrl = defaultDatabaseUrl(config);
+  if (dbUrl) {
+    if (kind === 'prod') {
+      lines.push(
+        'DATABASE_URL=postgresql://USER:PASSWORD@PROD_HOST:5432/PROD_DB',
+      );
+    } else if (kind === 'stg') {
+      lines.push(
+        'DATABASE_URL=postgresql://USER:PASSWORD@STAGING_HOST:5432/STAGING_DB',
+      );
+    } else if (kind === 'test') {
+      lines.push(
+        config.features.database === 'sqlite'
+          ? 'DATABASE_URL=file:./test.db'
+          : dbUrl.replace('/app', '/app_test'),
+      );
+    } else {
+      lines.push(`DATABASE_URL=${dbUrl}`);
+    }
+  }
+
+  if (config.features.cache === 'redis') {
+    lines.push(
+      kind === 'prod' || kind === 'stg'
+        ? 'REDIS_URL=redis://REDIS_HOST:6379'
+        : 'REDIS_URL=redis://localhost:6379',
+    );
+  }
+
+  lines.push('STORAGE_PATH=./uploads');
+  return lines;
 }
 
-function envName(file: string): string {
-  if (file.includes('prod')) return 'production';
-  if (file.includes('stg')) return 'staging';
-  if (file.includes('test')) return 'test';
-  if (file.includes('dev')) return 'development';
-  return 'development';
+export function envFiles(config: ProjectConfig): GeneratedFile[] {
+  const kinds = [
+    ['example', '.env.example'],
+    ['local', '.env'],
+    ['local', '.env.local'],
+    ['dev', '.env.dev'],
+    ['stg', '.env.stg'],
+    ['prod', '.env.prod'],
+    ['test', '.env.test'],
+  ] as const;
+
+  return kinds.map(([kind, pathName]) => ({
+    path: pathName,
+    content: `${buildEnvLines(config, kind).join('\n')}\n`,
+  }));
 }
 
 export function tsconfigFile(config: ProjectConfig): GeneratedFile | null {
@@ -230,31 +293,44 @@ function authEnvFields(config: ProjectConfig): string {
 
 function envConfigSource(config: ProjectConfig): string {
   const authFields = authEnvFields(config);
-  const dbField =
-    config.features.database !== 'none'
-      ? `  DATABASE_URL: { type: String, default: 'file:./dev.db' },
+  const needsDb =
+    config.features.database !== 'none' || config.features.orm !== 'none';
+  const dbDefault = defaultDatabaseUrl(config) || 'file:./dev.db';
+  const dbField = needsDb
+    ? `  DATABASE_URL: { type: String, default: '${dbDefault}' },
 `
-      : '';
+    : '';
   const redisField =
     config.features.cache === 'redis'
       ? `  REDIS_URL: { type: String, default: 'redis://localhost:6379' },
 `
       : '';
+  const securityFields = config.features.security
+    ? `  CORS_ORIGIN: { type: String, default: '*' },
+  RATE_LIMIT_WINDOW_MS: { type: Number, default: 900000 },
+  RATE_LIMIT_MAX: { type: Number, default: 200 },
+  BODY_LIMIT: { type: String, default: '1mb' },
+`
+    : '';
   const typeExport =
     config.language === 'ts' ? `\nexport type AppEnv = typeof appEnv;\n` : '';
   return `import { config as loadEnv } from 'dotenv';
 import { env, Port } from 'env-ok-kit';
 
-loadEnv({ path: process.env.ENV_FILE ?? '.env.local' });
+// Load base .env then overlay ENV_FILE / .env.local
+loadEnv();
+loadEnv({ path: process.env.ENV_FILE ?? '.env.local', override: true });
 
 export const appEnv = env({
+  APP_NAME: { type: String, default: '${config.projectName}' },
+  APP_URL: { type: String, default: 'http://localhost:${config.port}' },
   PORT: { type: Port, default: ${config.port} },
   HOST: { type: String, default: '0.0.0.0' },
   NODE_ENV: { type: String, default: 'development' },
   API_PREFIX: { type: String, default: '/api' },
   API_VERSION: { type: String, default: 'v1' },
   LOG_LEVEL: { type: String, default: 'info' },
-${authFields}${dbField}${redisField}  STORAGE_PATH: { type: String, default: './uploads' },
+${securityFields}${authFields}${dbField}${redisField}  STORAGE_PATH: { type: String, default: './uploads' },
 });
 ${typeExport}`;
 }
@@ -454,11 +530,11 @@ export function defaultScripts(config: ProjectConfig): Record<string, string> {
     format: 'prettier --write .',
   };
   if (isTs) {
-    scripts.dev = 'tsx watch src/index.ts';
+    scripts.dev = 'nodemon --exec tsx src/index.ts';
     scripts.build = 'tsc -p tsconfig.json';
     scripts.typecheck = 'tsc --noEmit';
   } else {
-    scripts.dev = `node --watch src/index.${e}`;
+    scripts.dev = 'nodemon src/index.js';
   }
   if (config.features.orm === 'prisma') {
     scripts['db:generate'] = 'prisma generate';
@@ -472,10 +548,32 @@ export function defaultScripts(config: ProjectConfig): Record<string, string> {
   return scripts;
 }
 
+export function nodemonFile(config: ProjectConfig): GeneratedFile {
+  const isTs = config.language === 'ts';
+  const cfg = isTs
+    ? {
+        watch: ['src'],
+        ext: 'ts,json',
+        ignore: ['node_modules', 'dist', 'coverage', 'tests'],
+        exec: 'tsx src/index.ts',
+      }
+    : {
+        watch: ['src'],
+        ext: 'js,json',
+        ignore: ['node_modules', 'dist', 'coverage', 'tests'],
+        exec: 'node src/index.js',
+      };
+  return {
+    path: 'nodemon.json',
+    content: `${JSON.stringify(cfg, null, 2)}\n`,
+  };
+}
+
 export function baseDevDeps(config: ProjectConfig): DepMap {
   const d: DepMap = {
     eslint: ver('eslint'),
     prettier: ver('prettier'),
+    nodemon: ver('nodemon'),
   };
   if (config.language === 'ts') {
     d.typescript = ver('typescript');
