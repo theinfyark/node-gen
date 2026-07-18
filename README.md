@@ -5,10 +5,14 @@
 **node-gen-kit** (`node-gen` CLI) scaffolds production-ready Node.js backends — comparable to `create-next-app`, focused on enterprise APIs.
 
 ```bash
+# Scaffold a project (this is the main command — not npm install)
 npx node-gen-kit
 # or
 npx node-gen
 ```
+
+> **Important:** `npm install node-gen-kit` only installs the package into `node_modules`.
+> It does **not** generate a backend. Always run `npx node-gen-kit` (or `node-gen`) in an interactive terminal.
 
 ## What this package covers
 

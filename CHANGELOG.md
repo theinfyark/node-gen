@@ -1,5 +1,15 @@
 # Changelog
 
+
+## [1.1.4] - 2026-07-18
+
+### Fixed
+
+- Clarify that \`npm install\` does not scaffold; require interactive TTY for prompts
+- Print clear next-step instructions when run without a TTY
+- Keep CLI version in sync with package.json
+
+
 ## [1.1.3] - 2026-07-17
 
 ### Changed

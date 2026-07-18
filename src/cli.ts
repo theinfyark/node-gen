@@ -5,19 +5,40 @@ import { runPrompts } from './prompts/index.js';
 import { createProject, defaultConfig } from './core/generator.js';
 import type { ProjectConfig } from './core/types.js';
 import path from 'node:path';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 
-const VERSION = '1.1.2';
+function readPackageVersion(): string {
+  try {
+    const pkgPath = path.join(
+      path.dirname(fileURLToPath(import.meta.url)),
+      '..',
+      'package.json',
+    );
+    return (JSON.parse(readFileSync(pkgPath, 'utf8')) as { version: string })
+      .version;
+  } catch {
+    return '0.0.0';
+  }
+}
+
+const VERSION = readPackageVersion();
 
 function printHelp(): void {
   console.log(`node-gen — Enterprise Node.js backend generator
 
 Usage:
-  node-gen [project-name] [options]
-  node-gen --yes [project-name]
+  npx node-gen-kit
+  npx node-gen-kit [project-name] [options]
+  npx node-gen-kit --yes [project-name]
+
+Note:
+  npm install node-gen-kit only installs the package.
+  Run the CLI above to scaffold a project (interactive terminal required).
 
 Options:
   --yes, -y          Non-interactive defaults (Express + TS + ESM)
-  --framework <name> express | fastify | hono
+  --framework <name> express | fastify | hono | koa
   --lang <name>      ts | js
   --pm <name>        npm | pnpm | yarn | bun
   --skip-install     Do not run package install
@@ -26,6 +47,25 @@ Options:
   --help, -h         Show help
   --version, -v      Show version
 `);
+}
+
+function assertInteractiveTerminal(): void {
+  if (process.stdin.isTTY && process.stdout.isTTY) return;
+
+  console.error(`
+${pc.red('node-gen needs an interactive terminal.')}
+
+${pc.dim('npm install node-gen-kit')} only adds the package — it does not scaffold.
+
+Run one of:
+
+  ${pc.cyan('npx node-gen-kit')}
+  ${pc.cyan('npx node-gen-kit my-api')}
+  ${pc.cyan('npx node-gen-kit my-api --yes')}   ${pc.dim('# no prompts')}
+
+Use a real terminal (not a piped/non-TTY session) for interactive mode.
+`);
+  process.exit(1);
 }
 
 function parseArgs(argv: string[]): {
@@ -126,6 +166,7 @@ export async function main(argv = process.argv.slice(2)): Promise<number> {
       },
     });
   } else {
+    assertInteractiveTerminal();
     config = await runPrompts(process.cwd());
     if (args.name) {
       config.projectName = args.name;
