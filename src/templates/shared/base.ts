@@ -104,7 +104,13 @@ function buildEnvLines(
           ? 'test'
           : 'development';
   const logLevel =
-    kind === 'prod' ? 'warn' : kind === 'test' ? 'error' : kind === 'stg' ? 'info' : 'debug';
+    kind === 'prod'
+      ? 'warn'
+      : kind === 'test'
+        ? 'error'
+        : kind === 'stg'
+          ? 'info'
+          : 'debug';
   const appUrl =
     kind === 'prod'
       ? 'https://api.example.com'

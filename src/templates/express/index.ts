@@ -1,38 +1,42 @@
-import type { ProjectConfig, GeneratedFile, DepMap } from "../../core/types.js";
-import { ver } from "../../core/versions.js";
-import { ext } from "../../utils/helpers.js";
+import type { ProjectConfig, GeneratedFile, DepMap } from '../../core/types.js';
+import { ver } from '../../core/versions.js';
+import { ext } from '../../utils/helpers.js';
+import {
+  expressLayeredRoutesIndex,
+  expressMvcFiles,
+} from './mvc.js';
 
 export function expressDeps(config: ProjectConfig): DepMap {
   const d: DepMap = {
-    express: ver("express"),
+    express: ver('express'),
   };
   if (config.features.security) {
-    d.helmet = ver("helmet");
-    d.cors = ver("cors");
-    d.compression = ver("compression");
-    d["express-rate-limit"] = ver("express-rate-limit");
+    d.helmet = ver('helmet');
+    d.cors = ver('cors');
+    d.compression = ver('compression');
+    d['express-rate-limit'] = ver('express-rate-limit');
   }
-  if (config.features.logger === "pino") {
-    d["pino-http"] = ver("pino-http");
+  if (config.features.logger === 'pino') {
+    d['pino-http'] = ver('pino-http');
   }
   return d;
 }
 
 export function expressDevDeps(config: ProjectConfig): DepMap {
-  if (config.language !== "ts") return {};
+  if (config.language !== 'ts') return {};
   const d: DepMap = {
-    "@types/express": ver("@types/express"),
+    '@types/express': ver('@types/express'),
   };
   if (config.features.security) {
-    d["@types/cors"] = ver("@types/cors");
-    d["@types/compression"] = ver("@types/compression");
+    d['@types/cors'] = ver('@types/cors');
+    d['@types/compression'] = ver('@types/compression');
   }
   return d;
 }
 
 export function expressFiles(config: ProjectConfig): GeneratedFile[] {
   const e = ext(config.language);
-  const ts = config.language === "ts";
+  const ts = config.language === 'ts';
   const files: GeneratedFile[] = [];
 
   files.push({
@@ -159,8 +163,12 @@ healthRouter.get('/health', (_req, res) => {
 `,
   });
 
-  // Items CRUD module
-  files.push(...itemsModuleExpress(config));
+  if (config.architecture === 'mvc') {
+    files.push(...expressMvcFiles(config));
+  } else {
+    files.push(...itemsModuleExpress(config));
+    files.push(expressLayeredRoutesIndex(config));
+  }
 
   files.push({
     path: `src/app/create-app.${e}`,
@@ -196,22 +204,23 @@ app.listen(appEnv.PORT, appEnv.HOST, () => {
 }
 
 function createAppSource(config: ProjectConfig): string {
-  const ts = config.language === "ts";
+  const ts = config.language === 'ts';
   const sec = config.features.security;
-  const auth = config.features.auth !== "none";
-  const docs = config.features.docs !== "none";
+  const docs = config.features.docs !== 'none';
 
-  return `${ts ? "import express from 'express';\n" : "import express from 'express';\n"}${sec ? "import helmet from 'helmet';\nimport cors from 'cors';\nimport compression from 'compression';\nimport rateLimit from 'express-rate-limit';\n" : ""}${config.features.logger === "pino" ? "import pinoHttp from 'pino-http';\nimport { logger } from '../lib/logger.js';\n" : ""}import { requestId } from '../middleware/request-id.js';
+  return `${ts ? "import express from 'express';\n" : "import express from 'express';\n"}${sec ? "import helmet from 'helmet';\nimport cors from 'cors';\nimport compression from 'compression';\nimport rateLimit from 'express-rate-limit';\n" : ''}${config.features.logger === 'pino' ? "import pinoHttp from 'pino-http';\nimport { logger } from '../lib/logger.js';\n" : ''}import { requestId } from '../middleware/request-id.js';
 import { errorHandler, notFoundHandler } from '../middleware/error-handler.js';
 import { healthRouter } from '../health/health.route.js';
-import { itemsRouter } from '../modules/items/items.route.js';
+import { apiRouter } from '../routes/index.js';
 import { appEnv } from '../config/env.js';
-${auth ? "import { authRouter } from '../modules/auth/auth.route.js';\n" : ""}${docs ? "import { mountDocs } from '../docs/openapi.js';\n" : ""}
+${docs ? "import { mountDocs } from '../docs/openapi.js';\n" : ''}
 export function createApp() {
   const app = express();
 
   app.use(requestId);
-${config.features.logger === "pino" ? "  app.use(pinoHttp({ logger }));\n" : ""}${sec ? `  app.use(helmet());
+${config.features.logger === 'pino' ? '  app.use(pinoHttp({ logger }));\n' : ''}${
+    sec
+      ? `  app.use(helmet());
   app.use(cors({ origin: appEnv.CORS_ORIGIN === '*' ? true : appEnv.CORS_ORIGIN.split(',').map((s) => s.trim()) }));
   app.use(compression());
   app.use(express.json({ limit: appEnv.BODY_LIMIT }));
@@ -223,12 +232,12 @@ ${config.features.logger === "pino" ? "  app.use(pinoHttp({ logger }));\n" : ""}
       legacyHeaders: false,
     }),
   );
-` : "  app.use(express.json({ limit: '1mb' }));\n"}
+`
+      : "  app.use(express.json({ limit: '1mb' }));\n"
+  }
   app.use(healthRouter);
-${docs ? "  mountDocs(app);\n" : ""}
-  const api = express.Router();
-  api.use('/items', itemsRouter);
-${auth ? "  api.use('/auth', authRouter);\n" : ""}  app.use(\`\${appEnv.API_PREFIX}/\${appEnv.API_VERSION}\`, api);
+${docs ? '  mountDocs(app);\n' : ''}
+  app.use(\`\${appEnv.API_PREFIX}/\${appEnv.API_VERSION}\`, apiRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);
@@ -240,8 +249,8 @@ ${auth ? "  api.use('/auth', authRouter);\n" : ""}  app.use(\`\${appEnv.API_PREF
 
 function itemsModuleExpress(config: ProjectConfig): GeneratedFile[] {
   const e = ext(config.language);
-  const ts = config.language === "ts";
-  const hasValidation = config.features.validation !== "none";
+  const ts = config.language === 'ts';
+  const hasValidation = config.features.validation !== 'none';
 
   const files: GeneratedFile[] = [
     {
@@ -387,7 +396,7 @@ export const itemsService = {
     content: ts
       ? `import { Router } from 'express';
 import { itemsService } from './items.service.js';
-${hasValidation ? "import { validateBody } from '../../middleware/validate.js';\nimport { createItemSchema, updateItemSchema } from './items.schema.js';\n" : ""}
+${hasValidation ? "import { validateBody } from '../../middleware/validate.js';\nimport { createItemSchema, updateItemSchema } from './items.schema.js';\n" : ''}
 export const itemsRouter = Router();
 
 itemsRouter.get('/', (_req, res) => {
@@ -402,7 +411,7 @@ itemsRouter.get('/:id', (req, res, next) => {
   }
 });
 
-itemsRouter.post('/'${hasValidation ? ", validateBody(createItemSchema)" : ""}, (req, res, next) => {
+itemsRouter.post('/'${hasValidation ? ', validateBody(createItemSchema)' : ''}, (req, res, next) => {
   try {
     const item = itemsService.create(req.body);
     res.status(201).json({ success: true, data: item });
@@ -411,7 +420,7 @@ itemsRouter.post('/'${hasValidation ? ", validateBody(createItemSchema)" : ""}, 
   }
 });
 
-itemsRouter.patch('/:id'${hasValidation ? ", validateBody(updateItemSchema)" : ""}, (req, res, next) => {
+itemsRouter.patch('/:id'${hasValidation ? ', validateBody(updateItemSchema)' : ''}, (req, res, next) => {
   try {
     const item = itemsService.update(req.params.id, req.body);
     res.json({ success: true, data: item });
@@ -431,7 +440,7 @@ itemsRouter.delete('/:id', (req, res, next) => {
 `
       : `import { Router } from 'express';
 import { itemsService } from './items.service.js';
-${hasValidation ? "import { validateBody } from '../../middleware/validate.js';\nimport { createItemSchema, updateItemSchema } from './items.schema.js';\n" : ""}
+${hasValidation ? "import { validateBody } from '../../middleware/validate.js';\nimport { createItemSchema, updateItemSchema } from './items.schema.js';\n" : ''}
 export const itemsRouter = Router();
 
 itemsRouter.get('/', (_req, res) => {
@@ -446,7 +455,7 @@ itemsRouter.get('/:id', (req, res, next) => {
   }
 });
 
-itemsRouter.post('/'${hasValidation ? ", validateBody(createItemSchema)" : ""}, (req, res, next) => {
+itemsRouter.post('/'${hasValidation ? ', validateBody(createItemSchema)' : ''}, (req, res, next) => {
   try {
     const item = itemsService.create(req.body);
     res.status(201).json({ success: true, data: item });
@@ -455,7 +464,7 @@ itemsRouter.post('/'${hasValidation ? ", validateBody(createItemSchema)" : ""}, 
   }
 });
 
-itemsRouter.patch('/:id'${hasValidation ? ", validateBody(updateItemSchema)" : ""}, (req, res, next) => {
+itemsRouter.patch('/:id'${hasValidation ? ', validateBody(updateItemSchema)' : ''}, (req, res, next) => {
   try {
     const item = itemsService.update(req.params.id, req.body);
     res.json({ success: true, data: item });

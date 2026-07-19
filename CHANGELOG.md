@@ -4,6 +4,24 @@
 
 
 
+
+## [1.2.0] - 2026-07-19
+
+### Added
+
+- Architecture choice: **MVC** (models / views / controllers) or **Layered**
+- MVC sample domains: \`items\`, \`orders\`, \`profiles\`
+- Main \`src/routes/index\` router that mounts all domain routes
+
+### Fixed
+
+- Architecture prompt value was previously ignored (always layered)
+
+
+
+
+
+
 ## [1.1.7] - 2026-07-18
 
 ### Added

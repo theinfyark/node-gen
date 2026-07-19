@@ -44,8 +44,18 @@ describe('createProject', () => {
     expect(existsSync(path.join(targetDir, 'src/health/health.route.ts'))).toBe(
       true,
     );
+    expect(existsSync(path.join(targetDir, 'src/routes/index.ts'))).toBe(true);
+    expect(existsSync(path.join(targetDir, 'src/models/items.model.ts'))).toBe(
+      true,
+    );
     expect(
-      existsSync(path.join(targetDir, 'src/modules/items/items.route.ts')),
+      existsSync(path.join(targetDir, 'src/controllers/items.controller.ts')),
+    ).toBe(true);
+    expect(existsSync(path.join(targetDir, 'src/routes/orders.routes.ts'))).toBe(
+      true,
+    );
+    expect(
+      existsSync(path.join(targetDir, 'src/routes/profiles.routes.ts')),
     ).toBe(true);
     expect(
       existsSync(path.join(targetDir, 'src/modules/auth/auth.route.ts')),
@@ -76,14 +86,19 @@ describe('createProject', () => {
     expect(existsSync(path.join(targetDir, 'nodemon.json'))).toBe(true);
     expect(existsSync(path.join(targetDir, '.env'))).toBe(true);
     expect(existsSync(path.join(targetDir, '.env.example'))).toBe(true);
-    const envExample = readFileSync(path.join(targetDir, '.env.example'), 'utf8');
+    const envExample = readFileSync(
+      path.join(targetDir, '.env.example'),
+      'utf8',
+    );
     expect(envExample).toContain('APP_NAME=');
     expect(envExample).toContain('CORS_ORIGIN=');
-    const envTs = readFileSync(path.join(targetDir, 'src/config/env.ts'), 'utf8');
+    const envTs = readFileSync(
+      path.join(targetDir, 'src/config/env.ts'),
+      'utf8',
+    );
     expect(envTs).toContain('APP_NAME');
     expect(envTs).toContain('RATE_LIMIT_MAX');
-    expect(envTs).toContain("loadEnv()");
-
+    expect(envTs).toContain('loadEnv()');
 
     rmSync(root, { recursive: true, force: true });
   });
@@ -167,7 +182,7 @@ describe('createProject', () => {
       true,
     );
     expect(
-      existsSync(path.join(targetDir, 'src/modules/items/items.schema.ts')),
+      existsSync(path.join(targetDir, 'src/models/items.schema.ts')),
     ).toBe(true);
     const env = readFileSync(path.join(targetDir, '.env.example'), 'utf8');
     expect(env).toContain('AUTH_JWKS_URI');
@@ -254,6 +269,51 @@ describe('createProject', () => {
     expect(pkg.scripts.dev).toContain('nodemon');
     expect(existsSync(path.join(targetDir, 'nodemon.json'))).toBe(true);
     expect(existsSync(path.join(targetDir, '.env'))).toBe(true);
+
+    rmSync(root, { recursive: true, force: true });
+  });
+
+  it('scaffolds layered architecture with modules + routes index', async () => {
+    const root = mkdtempSync(path.join(tmpdir(), 'node-gen-'));
+    const targetDir = path.join(root, 'layered-api');
+    await createProject(
+      defaultConfig({
+        projectName: 'layered-api',
+        targetDir,
+        architecture: 'layered',
+        skipInstall: true,
+        skipGit: true,
+        features: {
+          auth: 'none',
+          validation: 'zod',
+          database: 'none',
+          orm: 'none',
+          cache: 'none',
+          logger: 'pino',
+          docs: 'none',
+          docker: false,
+          ci: false,
+          security: false,
+          testing: 'none',
+          monitoring: false,
+          gitInit: false,
+          githubRepo: false,
+        },
+      }),
+    );
+
+    expect(
+      existsSync(path.join(targetDir, 'src/modules/items/items.route.ts')),
+    ).toBe(true);
+    expect(existsSync(path.join(targetDir, 'src/routes/index.ts'))).toBe(true);
+    const routesIndex = readFileSync(
+      path.join(targetDir, 'src/routes/index.ts'),
+      'utf8',
+    );
+    expect(routesIndex).toContain("apiRouter.use('/items'");
+    expect(existsSync(path.join(targetDir, 'src/models/items.model.ts'))).toBe(
+      false,
+    );
 
     rmSync(root, { recursive: true, force: true });
   });

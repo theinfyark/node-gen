@@ -16,6 +16,7 @@ import type {
   DocsChoice,
   TestRunner,
   ValidationChoice,
+  Architecture,
 } from '../core/types.js';
 import { defaultConfig } from '../core/generator.js';
 
@@ -118,16 +119,21 @@ export async function runPrompts(cwd = process.cwd()): Promise<ProjectConfig> {
     port = Number(custom);
   }
 
-  await p.select({
+  const architecture = await p.select({
     message: 'Architecture',
     options: [
       {
+        value: 'mvc',
+        label: 'MVC (models / views / controllers + routes)',
+        hint: 'recommended',
+      },
+      {
         value: 'layered',
-        label: 'Layered (controllers / services / repositories)',
+        label: 'Layered (modules with services / stores)',
       },
     ],
   });
-
+  isCancel(architecture);
   const optional = await p.group(
     {
       auth: () =>
@@ -287,6 +293,7 @@ export async function runPrompts(cwd = process.cwd()): Promise<ProjectConfig> {
     moduleSystem: moduleSystem as ModuleSystem,
     nodeVersion: nodeVersion as NodeVersion,
     port,
+    architecture: architecture as Architecture,
     features: {
       auth,
       validation,

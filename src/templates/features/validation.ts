@@ -14,11 +14,18 @@ export function expressValidationFiles(config: ProjectConfig): GeneratedFile[] {
   const e = ext(config.language);
   const ts = config.language === 'ts';
   const files: GeneratedFile[] = [];
+  // MVC writes items schema under models/; layered uses modules/items/
+  const schemaPath =
+    config.architecture === 'mvc'
+      ? `src/models/items.schema.${e}`
+      : `src/modules/items/items.schema.${e}`;
 
   if (config.features.validation === 'zod') {
-    files.push({
-      path: `src/modules/items/items.schema.${e}`,
-      content: `import { z } from 'zod';
+    // Skip schema file for MVC — expressMvcFiles already emits it
+    if (config.architecture !== 'mvc') {
+      files.push({
+        path: schemaPath,
+        content: `import { z } from 'zod';
 
 export const createItemSchema = z.object({
   name: z.string().min(1).max(120),
@@ -27,7 +34,8 @@ export const createItemSchema = z.object({
 
 export const updateItemSchema = createItemSchema.partial();
 `,
-    });
+      });
+    }
     files.push({
       path: `src/middleware/validate.${e}`,
       content: ts
@@ -63,9 +71,10 @@ export function validateBody(schema) {
 `,
     });
   } else {
-    files.push({
-      path: `src/modules/items/items.schema.${e}`,
-      content: `import Joi from 'joi';
+    if (config.architecture !== 'mvc') {
+      files.push({
+        path: schemaPath,
+        content: `import Joi from 'joi';
 
 export const createItemSchema = Joi.object({
   name: Joi.string().min(1).max(120).required(),
@@ -77,7 +86,8 @@ export const updateItemSchema = Joi.object({
   description: Joi.string().max(500).optional(),
 });
 `,
-    });
+      });
+    }
     files.push({
       path: `src/middleware/validate.${e}`,
       content: ts

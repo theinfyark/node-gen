@@ -35,7 +35,7 @@ npx node-gen
 | **Ops**              | Docker, docker-compose, GitHub Actions, Dependabot, CodeQL |
 | **Security**         | Helmet / secure headers, CORS, compression, rate limiting  |
 | **Env**              | Multi-env files + `env-ok-kit` validation                  |
-| **Architecture**     | Layered modules (routes → services → store)                |
+| **Architecture**     | MVC (models / views / controllers + routes) or Layered     |
 
 ## Why this package exists
 

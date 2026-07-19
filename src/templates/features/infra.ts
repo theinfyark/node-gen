@@ -31,6 +31,14 @@ function openApiDoc(projectName: string): string {
       get: { summary: 'List items', responses: { '200': { description: 'OK' } } },
       post: { summary: 'Create item', responses: { '201': { description: 'Created' } } },
     },
+    '/api/v1/orders': {
+      get: { summary: 'List orders', responses: { '200': { description: 'OK' } } },
+      post: { summary: 'Create order', responses: { '201': { description: 'Created' } } },
+    },
+    '/api/v1/profiles': {
+      get: { summary: 'List profiles', responses: { '200': { description: 'OK' } } },
+      post: { summary: 'Create profile', responses: { '201': { description: 'Created' } } },
+    },
   },
 }`;
 }

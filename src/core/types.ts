@@ -24,6 +24,8 @@ export type CacheChoice = 'redis' | 'none';
 export type DocsChoice = 'none' | 'swagger' | 'scalar' | 'openapi';
 export type TestRunner = 'none' | 'vitest' | 'jest' | 'mocha';
 
+export type Architecture = 'layered' | 'mvc';
+
 export interface ProjectConfig {
   projectName: string;
   targetDir: string;
@@ -33,7 +35,7 @@ export interface ProjectConfig {
   moduleSystem: ModuleSystem;
   nodeVersion: NodeVersion;
   port: number;
-  architecture: 'layered';
+  architecture: Architecture;
   features: {
     auth: AuthProvider;
     validation: ValidationChoice;

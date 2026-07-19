@@ -321,7 +321,7 @@ export function defaultConfig(
     moduleSystem: 'esm',
     nodeVersion: '22.23.1',
     port: 3000,
-    architecture: 'layered',
+    architecture: 'mvc',
     features: {
       auth: 'none',
       validation: 'zod',
